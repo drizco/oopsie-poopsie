@@ -12,10 +12,7 @@
     max-width: 4vw;
 
     img {
-      transition: transform 1s ease-in-out;
-      &.huge {
-        transform: translateX(630%) scale(55);
-      }
+      width: 100%;
     }
   }
 

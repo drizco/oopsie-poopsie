@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react"
 import Link from "next/link"
-import classNames from "classnames"
 import Modal from "reactstrap/lib/Modal"
 import ModalHeader from "reactstrap/lib/ModalHeader"
 import ModalBody from "reactstrap/lib/ModalBody"
@@ -13,7 +12,7 @@ const Header = () => {
   const toggleRules = () => {
     setShowRules(!showRules)
   }
-  const { mute, dark, mounted, setState } = useContext(CombinedContext)
+  const { mute, dark, setState } = useContext(CombinedContext)
 
   const handleSound = () => {
     setState(prevState => ({
@@ -35,9 +34,6 @@ const Header = () => {
             <img
               src="/images/poop.png"
               alt="Oh Shit Logo"
-              className={classNames({
-                [styles.huge]: !mounted
-              })}
             />
           </a>
         </Link>
