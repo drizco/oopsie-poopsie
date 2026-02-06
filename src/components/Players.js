@@ -1,11 +1,10 @@
-import React, { useContext } from "react"
+import { useContext } from "react"
 import Row from "reactstrap/lib/Row"
 import Col from "reactstrap/lib/Col"
 import { getSource, getColor } from "../utils/helpers"
 import Form from "reactstrap/lib/Form"
 import InputGroup from "reactstrap/lib/InputGroup"
 import Input from "reactstrap/lib/Input"
-import InputGroupAddon from "reactstrap/lib/InputGroupAddon"
 import Button from "reactstrap/lib/Button"
 import classNames from "classnames"
 import styles from "../styles/components/players.module.scss"
@@ -29,14 +28,13 @@ const Players = ({
   gameScore,
   timeLimit,
   winnerModalShowing,
-  status
+  status,
 }) => {
   const { dark, timer } = useContext(CombinedContext)
   let newPlayers = []
   let nextPlayer = thisPlayer
   const haveNextPlayer =
-    Object.values(players).length > 0 &&
-    Object.values(players).every(p => p.nextPlayer)
+    Object.values(players).length > 0 && Object.values(players).every((p) => p.nextPlayer)
   if (haveNextPlayer) {
     for (let i = 0; i < Object.keys(players).length; i++) {
       const player = players[nextPlayer]
@@ -55,8 +53,7 @@ const Players = ({
         newPlayers.map(({ playerId, present, name }) => {
           const isCurrent = currentPlayer === playerId
           const isDealer = dealer === playerId
-          let playerScore =
-            gameScore && gameScore[playerId] ? gameScore[playerId] : "0"
+          let playerScore = gameScore && gameScore[playerId] ? gameScore[playerId] : "0"
           if (!status || status === "pending") {
             playerScore = ""
           }
@@ -68,7 +65,7 @@ const Players = ({
                 className={classNames({
                   [styles.current_player_arrow]: isCurrent,
                   [styles.player_row]: true,
-                  "player-row": true
+                  "player-row": true,
                 })}
               >
                 <Col xs="4" className="d-flex align-items-center">
@@ -86,7 +83,7 @@ const Players = ({
                         [styles.current_player]: isCurrent,
                         [styles.not_present]: !present,
                         [styles.dealer]: isDealer,
-                        "player-name": true
+                        "player-name": true,
                       })}
                     >
                       {name}
@@ -111,7 +108,7 @@ const Players = ({
                       <img src={getSource(trick.cards[playerId].suit, dark)} />
                       <h2
                         style={{
-                          color: getColor(trick.cards[playerId].suit, dark)
+                          color: getColor(trick.cards[playerId].suit, dark),
                         }}
                       >
                         {trick.cards[playerId].value}
@@ -139,7 +136,7 @@ const Players = ({
                       <div>
                         {newPlayers &&
                           newPlayers
-                            .filter(p => !!bids && bids[p.playerId] != null)
+                            .filter((p) => !!bids && bids[p.playerId] != null)
                             .map(({ playerId, name }) => (
                               <h2
                                 className="mb-2"
@@ -151,42 +148,29 @@ const Players = ({
                     <Row className="justify-content-center">
                       <Form>
                         <InputGroup>
-                          <InputGroupAddon
-                            className="align-items-center"
-                            addonType="prepend"
+                          <Button
+                            className={styles.toggle_button}
+                            color="danger"
+                            onClick={(e) => handleToggle(false, e.target.value)}
                           >
-                            <Button
-                              className={styles.toggle_button}
-                              color="danger"
-                              onClick={e => handleToggle(false, e.target.value)}
-                            >
-                              -
-                            </Button>
-                          </InputGroupAddon>
+                            -
+                          </Button>
                           <Input
                             data-lpignore="true"
                             type="text"
                             value={bid}
                             name="bid"
                             id="bid"
-                            className={classNames(
-                              styles.toggle_results,
-                              "main-text"
-                            )}
+                            className={classNames(styles.toggle_results, "main-text")}
                             readOnly
                           />
-                          <InputGroupAddon
-                            className="align-items-center"
-                            addonType="append"
+                          <Button
+                            className={styles.toggle_button}
+                            color="success"
+                            onClick={(e) => handleToggle(true, e.target.value)}
                           >
-                            <Button
-                              className={styles.toggle_button}
-                              color="success"
-                              onClick={e => handleToggle(true, e.target.value)}
-                            >
-                              +
-                            </Button>
-                          </InputGroupAddon>
+                            +
+                          </Button>
                         </InputGroup>
                       </Form>
                     </Row>

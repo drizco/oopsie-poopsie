@@ -1,12 +1,11 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import InputGroup from "reactstrap/lib/InputGroup"
 import Input from "reactstrap/lib/Input"
-import InputGroupAddon from "reactstrap/lib/InputGroupAddon"
 import Button from "reactstrap/lib/Button"
 
 const CustomTrump = () => {
   const [trumpName, setTrumpName] = useState(
-    localStorage.getItem("trumpNamePref") || "trump"
+    localStorage.getItem("trumpNamePref") || "trump",
   )
 
   const [editMode, setEditMode] = useState(false)
@@ -22,18 +21,16 @@ const CustomTrump = () => {
         <InputGroup>
           <Input
             value={trumpName}
-            onChange={e => setTrumpName(e.target.value)}
-            onKeyDown={e => {
+            onChange={(e) => setTrumpName(e.target.value)}
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 save()
               }
             }}
           />
-          <InputGroupAddon className="align-items-center" addonType="append">
-            <Button color="primary" onClick={save}>
-              save
-            </Button>
-          </InputGroupAddon>
+          <Button color="primary" onClick={save}>
+            save
+          </Button>
         </InputGroup>
       ) : (
         <h3 onClick={() => setEditMode(true)}>{trumpName}</h3>

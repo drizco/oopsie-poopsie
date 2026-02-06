@@ -3,33 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--openssl-legacy-provider next dev",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider next build",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start"
   },
   "dependencies": {
-    "@zeit/next-css": "^1.0.1",
-    "atob": "^2.1.2",
-    "bootstrap": "^4.4.1",
-    "classnames": "^2.2.6",
-    "core-js": "^3.6.4",
-    "dotenv": "^8.2.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-react": "^7.19.0",
-    "firebase": "^7.13.1",
-    "isomorphic-unfetch": "^3.0.0",
-    "js-cookie": "^2.2.1",
-    "next": "9.3.3",
-    "next-cookies": "^2.0.3",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-firebaseui": "^4.1.0",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.0",
+    "classnames": "^2.5.0",
+    "firebase": "^9.0.0",
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "react-web-notification": "^0.7.0",
-    "reactstrap": "^8.4.1",
-    "sass": "^1.26.3",
-    "sass-loader": "^8.0.2",
-    "url-loader": "^4.0.0",
-    "webpack": "^4.42.1"
+    "reactstrap": "^9.0.0",
+    "sass": "^1.77.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

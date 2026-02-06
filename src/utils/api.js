@@ -1,5 +1,3 @@
-import fetch from "isomorphic-unfetch"
-
 export const startGame = async ({ gameId, players, numCards }) =>
   fetch("https://us-central1-oh-shit-ac7c3.cloudfunctions.net/api/start-game", {
     method: "POST",

@@ -1,5 +1,4 @@
 import { Component } from "react"
-import fetch from "isomorphic-unfetch"
 import Link from "next/link"
 import Container from "reactstrap/lib/Container"
 import Button from "reactstrap/lib/Button"
@@ -7,9 +6,6 @@ import Form from "reactstrap/lib/Form"
 import FormGroup from "reactstrap/lib/FormGroup"
 import Label from "reactstrap/lib/Label"
 import Input from "reactstrap/lib/Input"
-import InputGroup from "reactstrap/lib/InputGroup"
-import InputGroupAddon from "reactstrap/lib/InputGroupAddon"
-import InputGroupText from "reactstrap/lib/InputGroupText"
 import Row from "reactstrap/lib/Row"
 import Col from "reactstrap/lib/Col"
 import Modal from "reactstrap/lib/Modal"
@@ -21,13 +17,11 @@ import CardRow from "../../components/CardRow"
 import {
   getSource,
   calculateLeader,
-  getNextPlayer,
   isLegal,
   getScore,
-  calculateGameScore,
   getWinner,
   getAvailableTricks,
-  handleDirtyGame
+  handleDirtyGame,
 } from "../../utils/helpers"
 import Players from "../../components/Players"
 import { withRouter } from "next/router"
@@ -41,7 +35,7 @@ import {
   submitBid,
   updatePlayer,
   addPlayer,
-  nextRound
+  nextRound,
 } from "../../utils/api"
 import CustomTrump from "../../components/CustomTrump"
 import TurnChange from "../../components/TurnChange"
@@ -62,7 +56,7 @@ const INITIAL_STATE = {
   showScore: false,
   showYourTurn: false,
   trump: null,
-  queuedCard: null
+  queuedCard: null,
 }
 
 class Game extends Component {
@@ -97,11 +91,7 @@ class Game extends Component {
     if (playerId && prevState.playerId !== playerId) {
       this.listenForWindowClose(playerId)
     }
-    if (
-      this.props.gameId &&
-      prevProps.gameId &&
-      this.props.gameId !== prevProps.gameId
-    ) {
+    if (this.props.gameId && prevProps.gameId && this.props.gameId !== prevProps.gameId) {
       this.removeListeners()
       await this.initializeGame()
     }
@@ -113,7 +103,7 @@ class Game extends Component {
       const { gameId } = this.props
       const playerId = localStorage.getItem(`oh-shit-${gameId}-player-id`)
       const playerName = localStorage.getItem("player-name") || ""
-      Object.keys(localStorage).forEach(key => {
+      Object.keys(localStorage).forEach((key) => {
         const val = localStorage[key]
         if (key.startsWith("oh-shit") && val !== playerId) {
           localStorage.removeItem(key)
@@ -124,7 +114,7 @@ class Game extends Component {
       if (playerId) {
         await Promise.all([
           updatePlayer({ playerId, gameId, present: true }),
-          this.listenToGame({ gameId, playerId })
+          this.listenToGame({ gameId, playerId }),
         ])
       }
       this.context.setState({ mounted: true })
@@ -156,15 +146,15 @@ class Game extends Component {
     }
   }
 
-  listenForWindowClose = playerId => {
+  listenForWindowClose = (playerId) => {
     const { gameId } = this.props
-    window.addEventListener("beforeunload", event => {
+    window.addEventListener("beforeunload", (event) => {
       // Cancel the event as stated by the standard.
       event.preventDefault()
       // Chrome requires returnValue to be set.
       event.returnValue = ""
     })
-    window.addEventListener("unload", async event => {
+    window.addEventListener("unload", async (event) => {
       await updatePlayer({ playerId, gameId, present: false })
     })
   }
@@ -174,14 +164,14 @@ class Game extends Component {
       this.playersRef = ref(`players`).orderByChild("gameId").equalTo(gameId)
 
       await Promise.all([
-        this.playersRef.on("child_added", data => {
+        this.playersRef.on("child_added", (data) => {
           const player = data.val()
-          this.setState(prevState => {
+          this.setState((prevState) => {
             const newState = {
               players: {
                 ...prevState.players,
-                [player.playerId]: player
-              }
+                [player.playerId]: player,
+              },
             }
             if (player.host && player.playerId === playerId) {
               newState.isHost = true
@@ -189,17 +179,17 @@ class Game extends Component {
             return newState
           })
         }),
-        this.playersRef.on("child_changed", data => {
+        this.playersRef.on("child_changed", (data) => {
           const player = data.val()
-          this.setState(prevState => {
+          this.setState((prevState) => {
             return {
               players: {
                 ...prevState.players,
-                [player.playerId]: player
-              }
+                [player.playerId]: player,
+              },
             }
           })
-        })
+        }),
       ])
     } catch (error) {
       this.context.setState({ error: true })
@@ -211,43 +201,43 @@ class Game extends Component {
     try {
       this.gameRef = ref(`games/${gameId}`)
       await Promise.all([
-        this.gameRef.on("child_added", data => {
+        this.gameRef.on("child_added", (data) => {
           let value = data.val()
           const key = data.key
           this.setState(
-            prevState => ({
-              game: { ...prevState.game, [key]: value }
+            (prevState) => ({
+              game: { ...prevState.game, [key]: value },
             }),
             async () => {
               if (key === "roundId") {
                 await Promise.all([
                   this.listenToRound(value),
-                  this.listenToHand({ playerId, roundId: value })
+                  this.listenToHand({ playerId, roundId: value }),
                 ])
               }
-            }
+            },
           )
         }),
-        this.gameRef.on("child_changed", data => {
+        this.gameRef.on("child_changed", (data) => {
           let value = data.val()
           const key = data.key
-          this.setState(prevState =>
+          this.setState((prevState) =>
             key === "roundId"
               ? {
                   showScore: true,
-                  game: { ...prevState.game, [key]: value }
+                  game: { ...prevState.game, [key]: value },
                 }
               : {
-                  game: { ...prevState.game, [key]: value }
-                }
+                  game: { ...prevState.game, [key]: value },
+                },
           )
         }),
-        this.gameRef.on("child_removed", data => {
+        this.gameRef.on("child_removed", (data) => {
           const key = data.key
-          this.setState(prevState => ({
-            game: { ...prevState.game, [key]: null }
+          this.setState((prevState) => ({
+            game: { ...prevState.game, [key]: null },
           }))
-        })
+        }),
       ])
     } catch (error) {
       this.context.setState({ error: true })
@@ -260,26 +250,24 @@ class Game extends Component {
       try {
         this.handRef = ref(`hands/${playerId}/rounds/${roundId}/cards`)
         await Promise.all([
-          this.handRef.on("child_added", data => {
+          this.handRef.on("child_added", (data) => {
             const card = data.val()
-            this.setState(prevState => {
-              const cardIndex = prevState.hand.findIndex(
-                c => c.cardId === card.cardId
-              )
+            this.setState((prevState) => {
+              const cardIndex = prevState.hand.findIndex((c) => c.cardId === card.cardId)
               if (cardIndex === -1) {
                 return {
-                  hand: [...prevState.hand, card]
+                  hand: [...prevState.hand, card],
                 }
               }
             })
           }),
-          this.handRef.on("child_removed", data => {
+          this.handRef.on("child_removed", (data) => {
             const value = data.val()
             const key = data.key
-            this.setState(prevState => ({
-              hand: prevState.hand.filter(c => c.cardId !== key)
+            this.setState((prevState) => ({
+              hand: prevState.hand.filter((c) => c.cardId !== key),
             }))
-          })
+          }),
         ])
       } catch (error) {
         this.context.setState({ error: true })
@@ -288,16 +276,16 @@ class Game extends Component {
     }
   }
 
-  listenToTrump = async roundId => {
+  listenToTrump = async (roundId) => {
     try {
       this.trumpRef = ref(`rounds/${roundId}/trump`)
       if (this.trumpRef) {
         this.trumpRef.off()
       }
-      this.trumpRef.on("value", data => {
+      this.trumpRef.on("value", (data) => {
         const trump = data.val()
         this.setState({
-          trump
+          trump,
         })
       })
     } catch (error) {
@@ -306,7 +294,7 @@ class Game extends Component {
     }
   }
 
-  listenToTrick = async roundId => {
+  listenToTrick = async (roundId) => {
     try {
       if (this.trickRef) {
         this.trickRef.off()
@@ -314,33 +302,31 @@ class Game extends Component {
       this.trickRef = ref(`rounds/${roundId}/tricks`)
       let initialDataLoaded = false
       await Promise.all([
-        this.trickRef.on("child_added", data => {
+        this.trickRef.on("child_added", (data) => {
           if (initialDataLoaded) {
             const trick = data.val()
-            this.setState(prevState => {
+            this.setState((prevState) => {
               const newTricks = [...prevState.tricks, trick]
               const roundScore = getScore(newTricks)
 
               return {
                 tricks: newTricks,
-                roundScore
+                roundScore,
               }
             })
           }
         }),
-        this.trickRef.on("child_changed", data => {
+        this.trickRef.on("child_changed", (data) => {
           if (initialDataLoaded) {
             const trick = data.val()
-            this.setState(prevState => {
+            this.setState((prevState) => {
               const newTricks = [...prevState.tricks]
-              const trickIndex = newTricks.findIndex(
-                t => t.trickId === trick.trickId
-              )
+              const trickIndex = newTricks.findIndex((t) => t.trickId === trick.trickId)
               newTricks[trickIndex] = trick
               const roundScore = getScore(newTricks)
               const newState = {
                 tricks: newTricks,
-                roundScore
+                roundScore,
               }
               if (trick.winner) {
                 newState.winner = trick.winner
@@ -349,7 +335,7 @@ class Game extends Component {
             })
           }
         }),
-        this.trickRef.once("value").then(data => {
+        this.trickRef.once("value").then((data) => {
           const tricks = Object.values(data.val() || {})
           let trickIndex = tricks.length - 1
           if (trickIndex === -1) {
@@ -358,7 +344,7 @@ class Game extends Component {
           const roundScore = getScore(tricks)
           this.setState({ trickIndex, tricks, roundScore })
           initialDataLoaded = true
-        })
+        }),
       ])
     } catch (error) {
       this.context.setState({ error: true })
@@ -366,7 +352,7 @@ class Game extends Component {
     }
   }
 
-  listenToBid = async roundId => {
+  listenToBid = async (roundId) => {
     try {
       if (this.bidRef) {
         this.bidRef.off()
@@ -374,19 +360,19 @@ class Game extends Component {
       this.bidRef = ref(`rounds/${roundId}/bids`)
       let initialDataLoaded = false
       await Promise.all([
-        this.bidRef.on("child_added", data => {
+        this.bidRef.on("child_added", (data) => {
           if (initialDataLoaded) {
             const bid = data.val()
             const playerId = data.key
             this.setState(
-              prevState => ({
+              (prevState) => ({
                 bids: {
                   ...prevState.bids,
-                  [playerId]: bid
-                }
+                  [playerId]: bid,
+                },
               }),
               () => {
-                this.setState(prevState => {
+                this.setState((prevState) => {
                   const { game, bids, players, bid } = prevState
                   const { numCards, dirty } = game
                   let newBid = Number(bid)
@@ -401,14 +387,14 @@ class Game extends Component {
                   }
                   return {}
                 })
-              }
+              },
             )
           }
         }),
-        this.bidRef.once("value").then(data => {
+        this.bidRef.once("value").then((data) => {
           const bids = data.val()
           this.setState({ bids }, () => {
-            this.setState(prevState => {
+            this.setState((prevState) => {
               const { game, bids, players, bid } = prevState
               const { numCards, dirty } = game
               let newBid = Number(bid)
@@ -425,7 +411,7 @@ class Game extends Component {
             })
           })
           initialDataLoaded = true
-        })
+        }),
       ])
     } catch (error) {
       this.context.setState({ error: true })
@@ -433,12 +419,12 @@ class Game extends Component {
     }
   }
 
-  listenToRound = async roundId => {
+  listenToRound = async (roundId) => {
     try {
       await Promise.all([
         this.listenToTrump(roundId),
         this.listenToTrick(roundId),
-        this.listenToBid(roundId)
+        this.listenToBid(roundId),
       ])
     } catch (error) {
       this.context.setState({ error: true })
@@ -466,7 +452,7 @@ class Game extends Component {
       hand,
       tricks,
       trickIndex,
-      game: { status }
+      game: { status },
     } = this.state
     if (status === "play") {
       let handCopy = [...hand]
@@ -496,7 +482,7 @@ class Game extends Component {
       this.context.setState({ loading: true })
       const {
         game: { name, numCards, noBidPoints, dirty, timeLimit, gameId },
-        playerName
+        playerName,
       } = this.state
       const body = {
         game: name,
@@ -504,7 +490,7 @@ class Game extends Component {
         numCards,
         noBidPoints,
         dirty,
-        timeLimit: timeLimit ? Number(timeLimit) : null
+        timeLimit: timeLimit ? Number(timeLimit) : null,
       }
       const response = await newGame(body)
       if (response.ok) {
@@ -545,7 +531,7 @@ class Game extends Component {
       const { gameId } = this.props
       let {
         players,
-        game: { numCards }
+        game: { numCards },
       } = this.state
       await startGame({ gameId })
       this.context.setState({ loading: false })
@@ -555,21 +541,13 @@ class Game extends Component {
     }
   }
 
-  playCard = async card => {
+  playCard = async (card) => {
     try {
       if (this.autoPlayTimeout) {
         clearTimeout(this.autoPlayTimeout)
       }
       this.context.setState({ loading: true })
-      const {
-        game,
-        hand,
-        tricks,
-        trickIndex,
-        playerId,
-        players,
-        trump
-      } = this.state
+      const { game, hand, tricks, trickIndex, playerId, players, trump } = this.state
       const trick = tricks[trickIndex]
       let leadSuit
       if (!trick || !trick.cards || !Object.values(trick.cards).length) {
@@ -592,7 +570,7 @@ class Game extends Component {
         let leader = calculateLeader({
           cards: allCards,
           trump,
-          leadSuit: leadSuit || trick.leadSuit
+          leadSuit: leadSuit || trick.leadSuit,
         })
         if (leader) {
           leader = leader.playerId
@@ -608,7 +586,7 @@ class Game extends Component {
           roundId: game.roundId,
           trickId: trick.trickId,
           leadSuit,
-          nextRound
+          nextRound,
         }
         await playCard(body)
 
@@ -623,16 +601,13 @@ class Game extends Component {
         isLegal({ hand, card, leadSuit }) &&
         (!trick || !trick.cards || !trick.cards[playerId])
       ) {
-        this.setState(prevState => {
+        this.setState((prevState) => {
           let newCard = card
-          if (
-            prevState.queuedCard &&
-            prevState.queuedCard.cardId === card.cardId
-          ) {
+          if (prevState.queuedCard && prevState.queuedCard.cardId === card.cardId) {
             newCard = null
           }
           return {
-            queuedCard: newCard
+            queuedCard: newCard,
           }
         })
       }
@@ -655,7 +630,7 @@ class Game extends Component {
         numRounds,
         score,
         roundId,
-        noBidPoints
+        noBidPoints,
       } = game
       let descending = desc
       const roundNum = rn + 1
@@ -675,7 +650,7 @@ class Game extends Component {
         noBidPoints,
         roundId,
         gameOver,
-        dealer
+        dealer,
       }
       await nextRound(body)
     } catch (error) {
@@ -684,7 +659,7 @@ class Game extends Component {
     }
   }
 
-  submitBid = async optionalBid => {
+  submitBid = async (optionalBid) => {
     try {
       this.context.setState({ loading: true })
       const bid = optionalBid ? optionalBid : this.state.bid
@@ -699,7 +674,7 @@ class Game extends Component {
         nextPlayerId,
         bid,
         allBidsIn,
-        roundId
+        roundId,
       }
       await submitBid(body)
       this.context.setState({ loading: false })
@@ -709,23 +684,20 @@ class Game extends Component {
     }
   }
 
-  handleChange = e => {
+  handleChange = (e) => {
     const { value, name } = e.target
     this.setState({
-      [name]: value
+      [name]: value,
     })
   }
 
-  handleToggle = inc => {
-    this.setState(prevState => {
+  handleToggle = (inc) => {
+    this.setState((prevState) => {
       const { game, bids, players, bid } = prevState
       const { numCards, dirty } = game
       let newBid = Number(bid)
       newBid = inc ? newBid + 1 : newBid - 1
-      while (
-        dirty &&
-        !handleDirtyGame({ value: newBid, numCards, bids, players })
-      ) {
+      while (dirty && !handleDirtyGame({ value: newBid, numCards, bids, players })) {
         newBid = inc ? newBid + 1 : newBid - 1
       }
       if (newBid >= 0 && newBid <= numCards) {
@@ -739,14 +711,14 @@ class Game extends Component {
     const {
       playerId,
       game: { roundId, status },
-      winner
+      winner,
     } = this.state
     await Promise.all([
       this.listenToRound(roundId),
-      this.listenToHand({ playerId, roundId })
+      this.listenToHand({ playerId, roundId }),
     ])
     this.setState({
-      winner: null
+      winner: null,
     })
   }
 
@@ -768,7 +740,7 @@ class Game extends Component {
       showScore,
       showYourTurn,
       trump,
-      queuedCard
+      queuedCard,
     } = this.state
     let name,
       status,
@@ -828,19 +800,16 @@ class Game extends Component {
                   </Button>
                 </Row>
               )}
-              {status &&
-                (status === "bid" ||
-                  status === "play" ||
-                  status === "over") && (
-                  <>
-                    <h4>{`ROUND: ${roundNum} of ${numRounds}`}</h4>
-                    <h4>{`TOTAL TRICKS: ${numCards}`}</h4>
-                    <h4>{`TRICKS AVAILABLE: ${getAvailableTricks({
-                      numCards,
-                      bids
-                    })}`}</h4>
-                  </>
-                )}
+              {status && (status === "bid" || status === "play" || status === "over") && (
+                <>
+                  <h4>{`ROUND: ${roundNum} of ${numRounds}`}</h4>
+                  <h4>{`TOTAL TRICKS: ${numCards}`}</h4>
+                  <h4>{`TRICKS AVAILABLE: ${getAvailableTricks({
+                    numCards,
+                    bids,
+                  })}`}</h4>
+                </>
+              )}
             </Col>
             <Col xs="2" className={styles.lead_trump_container}>
               {leadSuit && (
@@ -874,11 +843,7 @@ class Game extends Component {
                       onChange={this.handleChange}
                     />
                   </FormGroup>
-                  <Button
-                    disabled={!playerName}
-                    color="success"
-                    onClick={this.addPlayer}
-                  >
+                  <Button disabled={!playerName} color="success" onClick={this.addPlayer}>
                     JOIN
                   </Button>
                 </Form>
@@ -892,7 +857,7 @@ class Game extends Component {
             roundScore={roundScore}
             trick={trick}
             bid={bid}
-            setBid={bid => this.setState({ bid })}
+            setBid={(bid) => this.setState({ bid })}
             dealer={dealer}
             handleToggle={this.handleToggle}
             submitBid={this.submitBid}
@@ -925,7 +890,7 @@ class Game extends Component {
               {winner && (
                 <h2 className="mb-3">{`${getWinner({
                   winner,
-                  players
+                  players,
                 })} won!`}</h2>
               )}
               <Button onClick={this.closeModal}>CLOSE</Button>
@@ -955,7 +920,7 @@ class Game extends Component {
                 }
                 return 0
               })
-              .map(player => (
+              .map((player) => (
                 <Row key={player.playerId}>
                   <Col xs="6">
                     <h5>{player.name}</h5>
@@ -992,9 +957,7 @@ class Game extends Component {
                     )}
                     {nextGame && (
                       <div className="mt-3 text-center">
-                        <Link href={`/game/[gameId]`} as={`/game/${nextGame}`}>
-                          <a>JOIN NEXT GAME</a>
-                        </Link>
+                        <Link href={`/game/${nextGame}`}>JOIN NEXT GAME</Link>
                       </div>
                     )}
                   </>
@@ -1031,22 +994,13 @@ class Game extends Component {
 
 Game.contextType = CombinedContext
 
-Game.getInitialProps = context => {
-  const { req, query } = context
-  const { gameId } = query
-  let userAgent
-  if (req) {
-    userAgent = req.headers["user-agent"]
-  } else {
-    userAgent = navigator.userAgent
-  }
+export async function getServerSideProps(context) {
+  const { gameId } = context.params
+  const userAgent = context.req.headers["user-agent"] || ""
   const isMobile = Boolean(
-    userAgent.match(
-      /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
-    )
+    userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i),
   )
-
-  return { gameId, isMobile }
+  return { props: { gameId, isMobile } }
 }
 
 export default withRouter(Game)

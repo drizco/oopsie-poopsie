@@ -1,4 +1,3 @@
-import React from "react"
 import App from "next/app"
 import Head from "next/head"
 import "bootstrap/dist/css/bootstrap.min.css"
@@ -14,7 +13,7 @@ import {
   PINK,
   RED,
   BLACK,
-  WHITE
+  WHITE,
 } from "../utils/constants"
 import ErrorModal from "../components/ErrorModal"
 import Spinner from "../components/Spinner"
@@ -30,7 +29,7 @@ export default class MyApp extends App {
       mounted: false,
       error: false,
       visible: true,
-      timer: null
+      timer: null,
     }
   }
 
@@ -38,13 +37,13 @@ export default class MyApp extends App {
     if (window && window.matchMedia) {
       this.setState(
         {
-          dark: this.prefersDark()
+          dark: this.prefersDark(),
         },
         () => {
           window
             .matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", this.handleDarkMode)
-        }
+        },
       )
     }
     if (document) {
@@ -54,13 +53,12 @@ export default class MyApp extends App {
 
   componentWillUnmount() {
     if (document) {
-      document.removeEventListener(
-        "visibilitychange",
-        this.handleVisibilityChange
-      )
+      document.removeEventListener("visibilitychange", this.handleVisibilityChange)
     }
     if (window && window.matchMedia) {
-      window.matchMedia.removeEventListener("change", this.handleDarkMode)
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .removeEventListener("change", this.handleDarkMode)
     }
   }
 
@@ -76,14 +74,14 @@ export default class MyApp extends App {
   handleVisibilityChange = () => {
     if (document) {
       this.setState({
-        visible: document.visibilityState === "visible"
+        visible: document.visibilityState === "visible",
       })
     }
   }
 
   handleDarkMode = () => {
     this.setState({
-      dark: this.prefersDark()
+      dark: this.prefersDark(),
     })
   }
 
@@ -121,9 +119,7 @@ export default class MyApp extends App {
         </Layout>
         <style global jsx>{`
           body {
-            background-color: ${dark
-              ? DARK_BACKGROUND
-              : LIGHT_BACKGROUND} !important;
+            background-color: ${dark ? DARK_BACKGROUND : LIGHT_BACKGROUND} !important;
           }
           h1,
           h2,
@@ -143,9 +139,7 @@ export default class MyApp extends App {
           }
 
           .modal-content {
-            background-color: ${dark
-              ? DARK_BACKGROUND
-              : LIGHT_BACKGROUND} !important;
+            background-color: ${dark ? DARK_BACKGROUND : LIGHT_BACKGROUND} !important;
             color: ${dark ? DARK_TEXT : LIGHT_TEXT} !important;
           }
 

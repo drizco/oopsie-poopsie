@@ -1,5 +1,6 @@
-import React, { useState, useRef, useContext, useEffect } from "react"
+import { useState, useRef, useContext, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/router"
 import Container from "reactstrap/lib/Container"
 import Button from "reactstrap/lib/Button"
 import Form from "reactstrap/lib/Form"
@@ -7,14 +8,11 @@ import FormGroup from "reactstrap/lib/FormGroup"
 import Label from "reactstrap/lib/Label"
 import Input from "reactstrap/lib/Input"
 import InputGroup from "reactstrap/lib/InputGroup"
-import InputGroupAddon from "reactstrap/lib/InputGroupAddon"
 import Dropdown from "reactstrap/lib/Dropdown"
 import DropdownItem from "reactstrap/lib/DropdownItem"
 import DropdownMenu from "reactstrap/lib/DropdownMenu"
 import DropdownToggle from "reactstrap/lib/DropdownToggle"
 import Row from "reactstrap/lib/Row"
-import { withRouter } from "next/router"
-import { absoluteUrl } from "../utils/helpers"
 import { newGame } from "../utils/api"
 import styles from "../styles/pages/home.module.scss"
 import { CopyIcon } from "../components/Icons"
@@ -24,7 +22,8 @@ import classnames from "classnames"
 
 const timeLimitOptions = ["none", "90", "60", "30", "10"]
 
-const CreateGame = ({ origin, router }) => {
+const CreateGame = () => {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [game, setGame] = useState("")
   const [gameCode, setGameCode] = useState("")
@@ -51,10 +50,10 @@ const CreateGame = ({ origin, router }) => {
   }, [])
 
   const toggle = () => {
-    setDropdownOpen(prevState => !prevState)
+    setDropdownOpen((prevState) => !prevState)
   }
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target
     switch (name) {
       case "name":
@@ -71,7 +70,7 @@ const CreateGame = ({ origin, router }) => {
     }
   }
 
-  const handleNumCards = inc => {
+  const handleNumCards = (inc) => {
     const newNumCards = inc ? numCards + 1 : numCards - 1
     if (newNumCards <= 10 && newNumCards >= 1) {
       setNumCards(newNumCards)
@@ -94,7 +93,7 @@ const CreateGame = ({ origin, router }) => {
         numCards,
         bidPoints,
         dirty,
-        timeLimit: timeLimit ? Number(timeLimit) : null
+        timeLimit: timeLimit ? Number(timeLimit) : null,
       }
       const response = await newGame(body)
       if (response.ok) {
@@ -102,6 +101,7 @@ const CreateGame = ({ origin, router }) => {
         localStorage.setItem(`oh-shit-${gameIdResponse}-player-id`, playerId)
         localStorage.setItem(`player-name`, name)
         setGameId(gameIdResponse)
+        const origin = window.location.origin
         setUrl(`${origin}/game/${gameIdResponse}`)
         setName("")
         setGame("")
@@ -114,10 +114,10 @@ const CreateGame = ({ origin, router }) => {
   }
 
   const joinGame = () => {
-    router.push("/game/[gameId]", `/game/${gameCode}`)
+    router.push(`/game/${gameCode}`)
   }
 
-  const copyToClipboard = e => {
+  const copyToClipboard = (e) => {
     gameUrlRef.current.select()
     document.execCommand("copy")
     e.target.focus()
@@ -137,30 +137,20 @@ const CreateGame = ({ origin, router }) => {
           <Row className="justify-content-center m-4">
             <h3>Share this link to invite other players</h3>
           </Row>
-          <Row
-            className="justify-content-center"
-            style={{ position: "relative" }}
-          >
+          <Row className="justify-content-center" style={{ position: "relative" }}>
             <Col xs="10" sm="7">
               <InputGroup>
-                <Input
-                  value={url}
-                  readOnly
-                  innerRef={gameUrlRef}
-                  data-lpignore="true"
-                />
-                <InputGroupAddon addonType="append">
-                  <Button onClick={copyToClipboard}>
-                    <CopyIcon style={{ width: 18 }} />
-                  </Button>
-                </InputGroupAddon>
+                <Input value={url} readOnly innerRef={gameUrlRef} data-lpignore="true" />
+                <Button onClick={copyToClipboard}>
+                  <CopyIcon style={{ width: 18 }} />
+                </Button>
               </InputGroup>
               <h6 className={styles.copied}>{copySuccess}</h6>
             </Col>
           </Row>
           <Row className="justify-content-center m-5">
-            <Link href={"/game/[gameId]"} as={`/game/${gameId}`}>
-              <a className={styles.enter_game_button}>ENTER GAME</a>
+            <Link href={`/game/${gameId}`} className={styles.enter_game_button}>
+              ENTER GAME
             </Link>
           </Row>
         </>
@@ -172,7 +162,7 @@ const CreateGame = ({ origin, router }) => {
                 <h2
                   className={classnames({
                     [styles.toggle]: true,
-                    [styles.selected]: create
+                    [styles.selected]: create,
                   })}
                   onClick={() => setCreate(true)}
                 >
@@ -183,7 +173,7 @@ const CreateGame = ({ origin, router }) => {
                 <h2
                   className={classnames({
                     [styles.toggle]: true,
-                    [styles.selected]: !create
+                    [styles.selected]: !create,
                   })}
                   onClick={() => setCreate(false)}
                 >
@@ -222,14 +212,9 @@ const CreateGame = ({ origin, router }) => {
                   <FormGroup>
                     <Label for="num-cards">Number of cards</Label>
                     <InputGroup>
-                      <InputGroupAddon addonType="prepend">
-                        <Button
-                          color="danger"
-                          onClick={() => handleNumCards(false)}
-                        >
-                          -
-                        </Button>
-                      </InputGroupAddon>
+                      <Button color="danger" onClick={() => handleNumCards(false)}>
+                        -
+                      </Button>
                       <Input
                         data-lpignore="true"
                         type="text"
@@ -239,14 +224,9 @@ const CreateGame = ({ origin, router }) => {
                         className={styles.num_cards}
                         readOnly
                       />
-                      <InputGroupAddon addonType="append">
-                        <Button
-                          color="success"
-                          onClick={() => handleNumCards(true)}
-                        >
-                          +
-                        </Button>
-                      </InputGroupAddon>
+                      <Button color="success" onClick={() => handleNumCards(true)}>
+                        +
+                      </Button>
                     </InputGroup>
                   </FormGroup>
                 </Col>
@@ -259,19 +239,17 @@ const CreateGame = ({ origin, router }) => {
                       {timeLimit ? `${timeLimit} seconds` : "None"}
                     </DropdownToggle>
                     <DropdownMenu flip={true} style={{ borderRadius: 0 }}>
-                      <DropdownItem onClick={e => handleDropDown(e)}>
-                        none
-                      </DropdownItem>
-                      <DropdownItem onClick={e => handleDropDown(e, 90)}>
+                      <DropdownItem onClick={(e) => handleDropDown(e)}>none</DropdownItem>
+                      <DropdownItem onClick={(e) => handleDropDown(e, 90)}>
                         90 seconds
                       </DropdownItem>
-                      <DropdownItem onClick={e => handleDropDown(e, 60)}>
+                      <DropdownItem onClick={(e) => handleDropDown(e, 60)}>
                         60 seconds
                       </DropdownItem>
-                      <DropdownItem onClick={e => handleDropDown(e, 30)}>
+                      <DropdownItem onClick={(e) => handleDropDown(e, 30)}>
                         30 seconds
                       </DropdownItem>
-                      <DropdownItem onClick={e => handleDropDown(e, 10)}>
+                      <DropdownItem onClick={(e) => handleDropDown(e, 10)}>
                         10 seconds
                       </DropdownItem>
                     </DropdownMenu>
@@ -303,11 +281,7 @@ const CreateGame = ({ origin, router }) => {
                 </FormGroup>
 
                 <div className="d-flex justify-content-center mt-3">
-                  <Button
-                    disabled={!name}
-                    color="primary"
-                    onClick={initializeGame}
-                  >
+                  <Button disabled={!name} color="primary" onClick={initializeGame}>
                     NEW GAME
                   </Button>
                 </div>
@@ -344,9 +318,4 @@ const CreateGame = ({ origin, router }) => {
   )
 }
 
-CreateGame.getInitialProps = ({ req, res }) => {
-  const { origin } = absoluteUrl(req, "localhost:3000")
-  return { origin }
-}
-
-export default withRouter(CreateGame)
+export default CreateGame
