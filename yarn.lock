@@ -1655,6 +1655,13 @@
     "@swc/counter" "^0.1.3"
     jsonc-parser "^3.2.0"
 
+"@swc/plugin-styled-jsx@^13.5.0":
+  version "13.5.0"
+  resolved "https://registry.yarnpkg.com/@swc/plugin-styled-jsx/-/plugin-styled-jsx-13.5.0.tgz#91183a0cd7614a00810ede220785f46ab880458b"
+  integrity sha512-InBC1Jmbb6xD/x4sONbO9HvPdFUgmD/zvP/uLEvEN90sZLGl6xB+ZWLn77pxOYig14QDD+yHoO3Mg3faICnMoA==
+  dependencies:
+    "@swc/counter" "^0.1.3"
+
 "@swc/types@^0.1.25":
   version "0.1.25"
   resolved "https://registry.yarnpkg.com/@swc/types/-/types-0.1.25.tgz#b517b2a60feb37dd933e542d93093719e4cf1078"
