@@ -43,6 +43,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
     test('should create a complete game in the database', async () => {
       const req = {
         ref: db.ref.bind(db),
+        uid: 'test-uid-1',
         body: {
           game: 'Integration Test Game',
           name: 'Test Host',
@@ -91,6 +92,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       // First create a game
       const newGameReq = {
         ref: db.ref.bind(db),
+        uid: 'test-uid-host',
         body: {
           game: 'Multiplayer Test',
           name: 'Host Player',
@@ -113,6 +115,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       // Now add two more players
       const player2Req = {
         ref: db.ref.bind(db),
+        uid: 'test-uid-player2',
         body: {
           playerName: 'Player 2',
           gameId,
@@ -129,6 +132,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
 
       const player3Req = {
         ref: db.ref.bind(db),
+        uid: 'test-uid-player3',
         body: {
           playerName: 'Player 3',
           gameId,
@@ -174,6 +178,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       await newGame(
         {
           ref: db.ref.bind(db),
+          uid: 'test-uid-flow-host',
           body: {
             game: 'Flow Test',
             name: 'Host',
@@ -198,6 +203,7 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       await addPlayer(
         {
           ref: db.ref.bind(db),
+          uid: 'test-uid-flow-player2',
           body: {
             playerName: 'Player 2',
             gameId,
