@@ -3,6 +3,8 @@ import Head from "next/head"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "../styles/main.scss"
 import { CombinedProvider } from "../context/CombinedContext"
+import { auth } from "../lib/firebase"
+import { signInAnonymously, onAuthStateChanged } from "firebase/auth"
 
 import Layout from "../components/Layout"
 import {
@@ -19,11 +21,13 @@ import ErrorModal from "../components/ErrorModal"
 import Spinner from "../components/Spinner"
 
 export default function MyApp({ Component, pageProps }) {
+  const [mounted, setMounted] = useState(false)
   const [state, setStateInternal] = useState({
     mute: true,
-    dark: true,
+    dark:
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches,
     loading: false,
-    mounted: false,
     error: false,
     visible: true,
     timer: null,
@@ -38,22 +42,42 @@ export default function MyApp({ Component, pageProps }) {
   const contextValue = useMemo(
     () => ({
       ...state,
+      mounted,
       setState,
     }),
-    [state, setState],
+    [state, mounted, setState],
   )
 
-  // dark mode preference detection and listener
+  // Set mounted flag after client-side hydration
   useEffect(() => {
-    const prefersDark = () =>
-      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [])
 
-    setStateInternal((prev) => ({ ...prev, dark: prefersDark() }))
+  // Firebase anonymous auth
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Sign in anonymously if not already signed in
+        signInAnonymously(auth).catch((error) => {
+          console.error("Error signing in anonymously:", error)
+          setState({ error: "Failed to authenticate. Please refresh the page." })
+        })
+      }
+    })
 
-    if (window.matchMedia) {
+    return () => unsubscribe()
+  }, [setState])
+
+  // dark mode preference change listener
+  useEffect(() => {
+    if (window?.matchMedia) {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+
       const handleChange = () => {
-        setStateInternal((prev) => ({ ...prev, dark: prefersDark() }))
+        setStateInternal((prev) => ({
+          ...prev,
+          dark: mediaQuery.matches,
+        }))
       }
 
       mediaQuery.addEventListener("change", handleChange)

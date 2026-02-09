@@ -1,1 +1,26 @@
-{ "rules": {} }
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      "$gameId": {
+        ".read": "auth != null",
+        ".indexOn": ["timestamp"]
+      }
+    },
+    "players": {
+      ".read": "auth != null",
+      ".indexOn": ["gameId"]
+    },
+    "rounds": {
+      ".read": "auth != null",
+      ".indexOn": ["gameId"]
+    },
+    "hands": {
+      "$playerId": {
+        ".read": "auth != null && data.child('uid').val() === auth.uid",
+        ".indexOn": ["gameId"]
+      }
+    }
+  }
+}

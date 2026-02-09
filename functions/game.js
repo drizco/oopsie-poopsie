@@ -33,6 +33,7 @@ export const newGame = async (req, res) => {
     updateObj[`players/${playerId}/gameId`] = gameId
     updateObj[`players/${playerId}/host`] = true
     updateObj[`players/${playerId}/playerId`] = playerId
+    updateObj[`players/${playerId}/uid`] = req.uid
     await ref().update(updateObj)
     return res.status(200).send({ playerId, gameId })
   } catch (error) {
@@ -131,7 +132,9 @@ export const startGame = async (req, res) => {
     Object.keys(hands).forEach(playerId => {
       const hand = hands[playerId]
       const sortedHand = deck.sortHand(hand)
+      const player = players.find(p => p.playerId === playerId)
       updateObj[`hands/${playerId}/gameId`] = gameId
+      updateObj[`hands/${playerId}/uid`] = player.uid
       sortedHand.forEach(card => {
         const cardRef = ref(`hands/${playerId}/rounds/${roundKey}/cards`).push()
         const cardId = cardRef.key
@@ -344,7 +347,8 @@ export const addPlayer = async (req, res) => {
       name: playerName,
       gameId,
       playerId,
-      present: true
+      present: true,
+      uid: req.uid
     })
     return res.status(200).send({ playerId })
   } catch (error) {

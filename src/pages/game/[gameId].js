@@ -22,7 +22,8 @@ import {
   get,
 } from "firebase/database"
 import CombinedContext from "../../context/CombinedContext"
-import { db } from "../../lib/firebase"
+import { db, auth } from "../../lib/firebase"
+import { onAuthStateChanged } from "firebase/auth"
 import styles from "../../styles/pages/game.module.scss"
 import CardRow from "../../components/CardRow"
 import {
@@ -71,7 +72,7 @@ function roundReducer(state, action) {
         ...state,
         tricks: [...state.tricks, action.trick],
       }
-    case "UPDATE_TRICK":
+    case "UPDATE_TRICK": {
       const updatedTricks = [...state.tricks]
       const idx = updatedTricks.findIndex((t) => t.trickId === action.trick.trickId)
       updatedTricks[idx] = action.trick
@@ -80,6 +81,7 @@ function roundReducer(state, action) {
         tricks: updatedTricks,
         showWinnerModal: action.trick.winner ? true : state.showWinnerModal,
       }
+    }
     case "SET_BIDS":
       return {
         ...state,
@@ -229,12 +231,12 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToPlayers error:`, error)
       }
     },
-    [updateState],
+    [updateState, context],
   )
 
   // Listen to game
   const listenToGame = useCallback(
-    async ({ gameId: gId, playerId: pId }) => {
+    async ({ gameId: gId }) => {
       try {
         const gameRef = ref(db, `games/${gId}`)
 
@@ -270,7 +272,7 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToGame error:`, error)
       }
     },
-    [updateState],
+    [updateState, context],
   )
 
   // Listen to hand
@@ -311,7 +313,7 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToHand error:`, error)
       }
     },
-    [updateState],
+    [updateState, context],
   )
 
   // Listen to trump
@@ -337,7 +339,7 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToTrump error:`, error)
       }
     },
-    [dispatchRound],
+    [dispatchRound, context],
   )
 
   // Listen to tricks
@@ -379,7 +381,7 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToTrick error:`, error)
       }
     },
-    [dispatchRound],
+    [dispatchRound, context],
   )
 
   // Listen to bids
@@ -448,7 +450,7 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToBid error:`, error)
       }
     },
-    [updateState, dispatchRound],
+    [updateState, dispatchRound, context],
   )
 
   // Listen to round (combines trump, tricks, and bids)
@@ -465,17 +467,13 @@ function Game({ gameId, isMobile }) {
         console.error(`listenToRound error:`, error)
       }
     },
-    [listenToTrump, listenToTrick, listenToBid],
+    [listenToTrump, listenToTrick, listenToBid, context],
   )
 
   // Window close listener
   const listenForWindowClose = useCallback(
     (pId) => {
-      window.addEventListener("beforeunload", (event) => {
-        event.preventDefault()
-        event.returnValue = ""
-      })
-      window.addEventListener("unload", async (event) => {
+      window.addEventListener("unload", async () => {
         await updatePlayer({ playerId: pId, gameId, present: false })
       })
     },
@@ -509,22 +507,28 @@ function Game({ gameId, isMobile }) {
           listenToGame({ gameId, playerId: pId }),
         ])
       }
-
-      context.setState({ mounted: true })
     } catch (error) {
-      context.setState({ mounted: true, error: true })
+      context.setState({ error: true })
       console.error(`initializeGame error:`, error)
     }
-  }, [gameId, updateState, listenToPlayers, listenToGame])
+  }, [gameId, updateState, listenToPlayers, listenToGame, context])
 
-  // Effect: Initialize game on mount and cleanup on unmount
+  // Effect: Initialize game once auth is ready
   useEffect(() => {
-    initializeGame()
+    // Wait for auth to be ready before initializing
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        initializeGame()
+        unsubscribe() // Only initialize once
+      }
+    })
 
     return () => {
+      unsubscribe()
       removeListeners()
     }
-  }, [initializeGame, removeListeners])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Effect: Update player presence on unmount
   useEffect(() => {
@@ -540,7 +544,7 @@ function Game({ gameId, isMobile }) {
     if (playerId) {
       listenForWindowClose(playerId)
     }
-  }, [playerId, listenForWindowClose])
+  }, [listenForWindowClose, playerId])
 
   // Effect: Setup round listeners when game.roundId changes
   useEffect(() => {
@@ -548,119 +552,54 @@ function Game({ gameId, isMobile }) {
       listenToRound(game.roundId)
       listenToHand({ playerId, roundId: game.roundId })
     }
-  }, [game?.roundId, playerId])
+  }, [game?.roundId, listenToHand, listenToRound, playerId])
 
-  // Your turn handler
-  const yourTurn = useCallback(async () => {
-    const { visible } = context
-    if (queuedCard) {
-      autoPlayTimeout.current = setTimeout(async () => {
-        await playCard(queuedCard)
-        updateState({ queuedCard: null })
-      }, 700)
-    } else {
-      if (!visible) {
-        updateState({ showYourTurn: true })
-      }
-    }
-  }, [queuedCard, context])
-
-  // Random play
-  const randomPlay = useCallback(() => {
-    if (!game) return
-
-    const { status } = game
-
-    if (status === "play") {
-      let handCopy = [...hand]
-      let leadSuit
-      const trick = tricks[trickIndex]
-      if (trick && trick.leadSuit) {
-        leadSuit = trick.leadSuit
-      }
-      let randomIndex = Math.floor(Math.random() * handCopy.length)
-      let card = handCopy[randomIndex]
-      while (!isLegal({ hand, leadSuit, card: handCopy[randomIndex] })) {
-        handCopy.splice(randomIndex, 1)
-        randomIndex = Math.floor(Math.random() * handCopy.length)
-        card = handCopy[randomIndex]
-      }
-      if (card) {
-        playCard(card)
-      }
-    } else if (status === "bid") {
-      const randomBid = Math.floor(Math.random() * (hand.length + 1))
-      submitBid(randomBid)
-    }
-  }, [game, hand, tricks, trickIndex])
-
-  // Play again
-  const playAgain = useCallback(async () => {
+  // Next round
+  const nextRound = useCallback(async () => {
     try {
       if (!game) return
-      context.setState({ loading: true })
 
-      const {
-        name,
-        numCards,
+      let {
+        numCards: nc,
+        roundNum: rn,
+        descending: desc,
+        dealer: oldDealer,
+        gameId: gId,
+        numRounds,
+        roundId,
         noBidPoints,
-        dirty,
-        timeLimit,
-        gameId: currentGameId,
       } = game
 
+      let descending = desc
+      const roundNum = rn + 1
+      let numCards = descending ? nc - 1 : nc + 1
+
+      if (numCards < 1) {
+        descending = false
+        numCards = 2
+      }
+
+      const dealer = players[oldDealer].nextPlayer
+      const gameOver = roundNum > numRounds
+
       const body = {
-        game: name,
-        name: playerName,
+        roundNum,
+        numRounds,
         numCards,
+        descending,
+        gameId: gId,
         noBidPoints,
-        dirty,
-        timeLimit: timeLimit ? Number(timeLimit) : null,
+        roundId,
+        gameOver,
+        dealer,
       }
 
-      const response = await newGame(body)
-      if (response.ok) {
-        const { playerId: newPlayerId, gameId: gameIdResponse } = await response.json()
-        localStorage.setItem(`oh-shit-${gameIdResponse}-player-id`, newPlayerId)
-        await replayGame({ oldGameId: currentGameId, newGameId: gameIdResponse })
-      }
-      context.setState({ loading: false })
+      await nextRoundApi(body)
     } catch (error) {
-      context.setState({ loading: false, error: true })
-      console.error(`playAgain error:`, error)
+      context.setState({ error: true })
+      console.error(`nextRound error:`, error)
     }
-  }, [game, playerName])
-
-  // Add player
-  const addPlayer = useCallback(async () => {
-    try {
-      context.setState({ loading: true })
-      const response = await addPlayerApi({ playerName, gameId })
-      if (response.ok) {
-        const { playerId: newPlayerId } = await response.json()
-        localStorage.setItem(`oh-shit-${gameId}-player-id`, newPlayerId)
-        localStorage.setItem("player-name", playerName)
-        updateState({ playerId: newPlayerId })
-        listenToGame({ gameId, playerId: newPlayerId })
-        context.setState({ loading: false })
-      }
-    } catch (error) {
-      context.setState({ loading: false, error: true })
-      console.error(`addPlayer error:`, error)
-    }
-  }, [playerName, gameId, updateState, listenToGame])
-
-  // Start game
-  const startGameHandler = useCallback(async () => {
-    try {
-      context.setState({ loading: true })
-      await startGame({ gameId })
-      context.setState({ loading: false })
-    } catch (error) {
-      context.setState({ loading: false, error: true })
-      console.error(`startGame error:`, error)
-    }
-  }, [gameId])
+  }, [context, game, players])
 
   // Play card
   const playCard = useCallback(
@@ -747,55 +686,34 @@ function Game({ gameId, isMobile }) {
         console.error(`playCard error:`, error)
       }
     },
-    [game, hand, tricks, trickIndex, playerId, players, trump, updateState],
+    [
+      context,
+      tricks,
+      trickIndex,
+      game,
+      playerId,
+      hand,
+      trump,
+      players,
+      nextRound,
+      updateState,
+    ],
   )
 
-  // Next round
-  const nextRound = useCallback(async () => {
-    try {
-      if (!game) return
-
-      let {
-        numCards: nc,
-        roundNum: rn,
-        descending: desc,
-        dealer: oldDealer,
-        gameId: gId,
-        numRounds,
-        roundId,
-        noBidPoints,
-      } = game
-
-      let descending = desc
-      const roundNum = rn + 1
-      let numCards = descending ? nc - 1 : nc + 1
-
-      if (numCards < 1) {
-        descending = false
-        numCards = 2
+  // Your turn handler
+  const yourTurn = useCallback(async () => {
+    const { visible } = context
+    if (queuedCard) {
+      autoPlayTimeout.current = setTimeout(async () => {
+        await playCard(queuedCard)
+        updateState({ queuedCard: null })
+      }, 700)
+    } else {
+      if (!visible) {
+        updateState({ showYourTurn: true })
       }
-
-      const dealer = players[oldDealer].nextPlayer
-      const gameOver = roundNum > numRounds
-
-      const body = {
-        roundNum,
-        numRounds,
-        numCards,
-        descending,
-        gameId: gId,
-        noBidPoints,
-        roundId,
-        gameOver,
-        dealer,
-      }
-
-      await nextRoundApi(body)
-    } catch (error) {
-      context.setState({ error: true })
-      console.error(`nextRound error:`, error)
     }
-  }, [game, players])
+  }, [context, queuedCard, playCard, updateState])
 
   // Submit bid
   const submitBid = useCallback(
@@ -807,7 +725,7 @@ function Game({ gameId, isMobile }) {
 
         if (!game) return
 
-        const { numPlayers, roundId, timeLimit } = game
+        const { numPlayers, roundId } = game
         const allBidsIn = Object.keys(bids || {}).length === numPlayers - 1
         const nextPlayerId = players[playerId].nextPlayer
 
@@ -829,6 +747,103 @@ function Game({ gameId, isMobile }) {
     },
     [bid, game, bids, players, playerId, gameId, context],
   )
+
+  // Random play
+  const randomPlay = useCallback(() => {
+    if (!game) return
+
+    const { status } = game
+
+    if (status === "play") {
+      let handCopy = [...hand]
+      let leadSuit
+      const trick = tricks[trickIndex]
+      if (trick && trick.leadSuit) {
+        leadSuit = trick.leadSuit
+      }
+      let randomIndex = Math.floor(Math.random() * handCopy.length)
+      let card = handCopy[randomIndex]
+      while (!isLegal({ hand, leadSuit, card: handCopy[randomIndex] })) {
+        handCopy.splice(randomIndex, 1)
+        randomIndex = Math.floor(Math.random() * handCopy.length)
+        card = handCopy[randomIndex]
+      }
+      if (card) {
+        playCard(card)
+      }
+    } else if (status === "bid") {
+      const randomBid = Math.floor(Math.random() * (hand.length + 1))
+      submitBid(randomBid)
+    }
+  }, [game, hand, tricks, trickIndex, playCard, submitBid])
+
+  // Play again
+  const playAgain = useCallback(async () => {
+    try {
+      if (!game) return
+      context.setState({ loading: true })
+
+      const {
+        name,
+        numCards,
+        noBidPoints,
+        dirty,
+        timeLimit,
+        gameId: currentGameId,
+      } = game
+
+      const body = {
+        game: name,
+        name: playerName,
+        numCards,
+        noBidPoints,
+        dirty,
+        timeLimit: timeLimit ? Number(timeLimit) : null,
+      }
+
+      const response = await newGame(body)
+      if (response.ok) {
+        const { playerId: newPlayerId, gameId: gameIdResponse } = await response.json()
+        localStorage.setItem(`oh-shit-${gameIdResponse}-player-id`, newPlayerId)
+        await replayGame({ oldGameId: currentGameId, newGameId: gameIdResponse })
+      }
+      context.setState({ loading: false })
+    } catch (error) {
+      context.setState({ loading: false, error: true })
+      console.error(`playAgain error:`, error)
+    }
+  }, [context, game, playerName])
+
+  // Add player
+  const addPlayer = useCallback(async () => {
+    try {
+      context.setState({ loading: true })
+      const response = await addPlayerApi({ playerName, gameId })
+      if (response.ok) {
+        const { playerId: newPlayerId } = await response.json()
+        localStorage.setItem(`oh-shit-${gameId}-player-id`, newPlayerId)
+        localStorage.setItem("player-name", playerName)
+        updateState({ playerId: newPlayerId })
+        listenToGame({ gameId, playerId: newPlayerId })
+        context.setState({ loading: false })
+      }
+    } catch (error) {
+      context.setState({ loading: false, error: true })
+      console.error(`addPlayer error:`, error)
+    }
+  }, [context, playerName, gameId, updateState, listenToGame])
+
+  // Start game
+  const startGameHandler = useCallback(async () => {
+    try {
+      context.setState({ loading: true })
+      await startGame({ gameId })
+      context.setState({ loading: false })
+    } catch (error) {
+      context.setState({ loading: false, error: true })
+      console.error(`startGame error:`, error)
+    }
+  }, [context, gameId])
 
   // Handle input change
   const handleChange = useCallback(
@@ -867,46 +882,31 @@ function Game({ gameId, isMobile }) {
     dispatchRound({ type: "HIDE_WINNER_MODAL" })
   }, [game, playerId, listenToRound, listenToHand, dispatchRound])
 
-  // Render variables
-  let name,
+  const user = playerId ? players[playerId] : null
+
+  const { dark, timer } = context
+
+  if (!game || !user) return null
+
+  const {
+    name,
     status,
     currentPlayer,
-    leadSuit,
-    roundId,
     gameScore,
     dealer,
     roundNum,
     numRounds,
     numCards,
     nextGame,
-    timeLimit
+    timeLimit,
+  } = game
 
-  if (game) {
-    name = game.name
-    status = game.status
-    currentPlayer = game.currentPlayer
-    roundId = game.roundId
-    gameScore = game.score
-    dealer = game.dealer
-    roundNum = game.roundNum
-    numRounds = game.numRounds
-    numCards = game.numCards
-    nextGame = game.nextGame
-    timeLimit = game.timeLimit
-  }
+  const userName = user.name ?? ""
 
   const trick = tricks && trickIndex !== undefined ? tricks[trickIndex] : null
-  if (trick) {
-    leadSuit = trick.leadSuit
-  }
-
-  const user = playerId ? players[playerId] : null
-  const userName = (user && user.name) || ""
-
-  const { dark, timer } = context
+  const leadSuit = trick?.leadSuit
 
   const timerShowMax = timeLimit > 10 ? 10 : 5
-
   return (
     <>
       <div className={styles.game_page}>
