@@ -1,4 +1,4 @@
-import { useState, useContext } from "react"
+import { useState, useContext, useEffect } from "react"
 import Link from "next/link"
 import { Modal, ModalHeader, ModalBody } from "reactstrap"
 import CombinedContext from "../context/CombinedContext"
@@ -7,10 +7,17 @@ import { Sound, Mute, Sun, Moon } from "../components/Icons"
 
 const Header = () => {
   const [showRules, setShowRules] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { mute, dark, setState } = useContext(CombinedContext)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true)
+  }, [])
+
   const toggleRules = () => {
     setShowRules(!showRules)
   }
-  const { mute, dark, setState } = useContext(CombinedContext)
 
   const handleSound = () => {
     setState((prevState) => ({
@@ -33,15 +40,27 @@ const Header = () => {
         <h1>oopsie poopsie...</h1>
 
         <div className={styles.rules}>
-          <div title={dark ? "Light mode" : "Dark mode"} onClick={handleDark}>
-            {dark ? <Sun className={styles.icon} /> : <Moon className={styles.icon} />}
-          </div>
-          <div
-            title={`Notification sounds ${mute ? "muted" : "active"}`}
-            onClick={handleSound}
-          >
-            {mute ? <Mute className={styles.icon} /> : <Sound className={styles.icon} />}
-          </div>
+          {mounted && (
+            <>
+              <div title={dark ? "Light mode" : "Dark mode"} onClick={handleDark}>
+                {dark ? (
+                  <Sun className={styles.icon} />
+                ) : (
+                  <Moon className={styles.icon} />
+                )}
+              </div>
+              <div
+                title={`Notification sounds ${mute ? "muted" : "active"}`}
+                onClick={handleSound}
+              >
+                {mute ? (
+                  <Mute className={styles.icon} />
+                ) : (
+                  <Sound className={styles.icon} />
+                )}
+              </div>
+            </>
+          )}
           <button onClick={toggleRules}>
             <h4 className="red-text">rules</h4>
           </button>
