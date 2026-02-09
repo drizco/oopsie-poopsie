@@ -21,7 +21,6 @@ import ErrorModal from "../components/ErrorModal"
 import Spinner from "../components/Spinner"
 
 export default function MyApp({ Component, pageProps }) {
-  const [mounted, setMounted] = useState(false)
   const [state, setStateInternal] = useState({
     mute: true,
     dark:
@@ -42,16 +41,10 @@ export default function MyApp({ Component, pageProps }) {
   const contextValue = useMemo(
     () => ({
       ...state,
-      mounted,
       setState,
     }),
-    [state, mounted, setState],
+    [state, setState],
   )
-
-  // Set mounted flag after client-side hydration
-  useEffect(() => {
-    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect
-  }, [])
 
   // Firebase anonymous auth
   useEffect(() => {
