@@ -38,3 +38,6 @@ serviceKey.json
 .env.build
 
 *.log
+
+/functions/node_modules
+/functions/emulator-data

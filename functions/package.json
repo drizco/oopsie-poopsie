@@ -9,7 +9,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "emulator": "firebase emulators:start --project=demo-oopsie-poopsie"
+    "emulator": "firebase emulators:start --project=demo-oopsie-poopsie --only database,auth,functions --import=./emulator-data --export-on-exit=./emulator-data"
   },
   "engines": {
     "node": "20"
