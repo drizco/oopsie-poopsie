@@ -2,6 +2,8 @@
 import { jest } from '@jest/globals';
 import { render as rtlRender } from '@testing-library/react';
 import CombinedContext from '@/context/CombinedContext';
+import { SettingsProvider } from '@/context/SettingsContext';
+import { TimerProvider } from '@/context/TimerContext';
 
 /**
  * Custom render function that wraps components with necessary providers
@@ -22,12 +24,9 @@ export function render(
     setLoading: jest.fn(),
     error: null,
     setError: jest.fn(),
-    timerState: {
-      timeRemaining: 60,
-      isActive: false,
-      isPaused: false,
-    },
-    timerDispatch: jest.fn(),
+    timer: 60,
+    setTimer: jest.fn(),
+    setState: jest.fn(),
   };
 
   const mergedContextValue = {
@@ -35,10 +34,28 @@ export function render(
     ...contextValue,
   };
 
+  // Settings context values
+  const settingsValue = {
+    mute: mergedContextValue.mute,
+    setMute: mergedContextValue.setMute,
+    dark: mergedContextValue.dark,
+    setDark: mergedContextValue.setDark,
+  };
+
+  // Timer context values
+  const timerValue = {
+    timer: mergedContextValue.timer,
+    setTimer: mergedContextValue.setTimer,
+  };
+
   function Wrapper({ children }) {
     return (
       <CombinedContext.Provider value={mergedContextValue}>
-        {children}
+        <SettingsProvider value={settingsValue}>
+          <TimerProvider value={timerValue}>
+            {children}
+          </TimerProvider>
+        </SettingsProvider>
       </CombinedContext.Provider>
     );
   }
@@ -59,12 +76,9 @@ export function createMockContext(overrides = {}) {
     setLoading: jest.fn(),
     error: null,
     setError: jest.fn(),
-    timerState: {
-      timeRemaining: 60,
-      isActive: false,
-      isPaused: false,
-    },
-    timerDispatch: jest.fn(),
+    timer: 60,
+    setTimer: jest.fn(),
+    setState: jest.fn(),
     ...overrides,
   };
 }

@@ -61,43 +61,43 @@ describe("Header Component", () => {
   })
 
   test("toggles sound mute when sound icon is clicked", () => {
-    const setStateMock = jest.fn((updater) => {
+    const setMuteMock = jest.fn((updater) => {
       if (typeof updater === "function") {
-        updater({ mute: false })
+        updater(false)
       }
     })
 
     render(<Header />, {
       contextValue: {
         mute: false,
-        setState: setStateMock,
+        setMute: setMuteMock,
       },
     })
 
     const soundButton = screen.getByTitle(/Notification sounds active/i)
     fireEvent.click(soundButton)
 
-    expect(setStateMock).toHaveBeenCalled()
+    expect(setMuteMock).toHaveBeenCalled()
   })
 
   test("toggles dark mode when theme icon is clicked", () => {
-    const setStateMock = jest.fn((updater) => {
+    const setDarkMock = jest.fn((updater) => {
       if (typeof updater === "function") {
-        updater({ dark: false })
+        updater(false)
       }
     })
 
     render(<Header />, {
       contextValue: {
         dark: false,
-        setState: setStateMock,
+        setDark: setDarkMock,
       },
     })
 
     const themeButton = screen.getByTitle(/Dark mode/i)
     fireEvent.click(themeButton)
 
-    expect(setStateMock).toHaveBeenCalled()
+    expect(setDarkMock).toHaveBeenCalled()
   })
 
   test("shows correct icon for muted state", () => {

@@ -16,7 +16,7 @@ describe('TurnChange Component', () => {
     const { container } = render(<TurnChange {...defaultProps} />, {
       contextValue: {
         timer: 30,
-        setState: jest.fn(),
+        setTimer: jest.fn(),
       },
     })
 
@@ -28,7 +28,7 @@ describe('TurnChange Component', () => {
     const { container } = render(<TurnChange {...defaultProps} />, {
       contextValue: {
         timer: -1,
-        setState: jest.fn(),
+        setTimer: jest.fn(),
       },
     })
 
@@ -49,7 +49,7 @@ describe('TurnChange Component', () => {
       {
         contextValue: {
           timer: 60,
-          setState: jest.fn(),
+          setTimer: jest.fn(),
         },
       }
     )
@@ -70,7 +70,7 @@ describe('TurnChange Component', () => {
       {
         contextValue: {
           timer: 60,
-          setState: jest.fn(),
+          setTimer: jest.fn(),
         },
       }
     )
@@ -79,14 +79,14 @@ describe('TurnChange Component', () => {
   })
 
   test('resets timer when currentPlayer changes', () => {
-    const mockSetState = jest.fn()
+    const mockSetTimer = jest.fn()
 
     const { rerender } = render(
       <TurnChange {...defaultProps} currentPlayer="player-1" />,
       {
         contextValue: {
           timer: 30,
-          setState: mockSetState,
+          setTimer: mockSetTimer,
         },
       }
     )
@@ -97,22 +97,22 @@ describe('TurnChange Component', () => {
       {
         contextValue: {
           timer: 30,
-          setState: mockSetState,
+          setTimer: mockSetTimer,
         },
       }
     )
 
-    // setState should be called to reset timer to timeLimit
-    expect(mockSetState).toHaveBeenCalledWith({ timer: 60 })
+    // setTimer should be called to reset timer to timeLimit
+    expect(mockSetTimer).toHaveBeenCalledWith(60)
   })
 
   test('resets timer when winner changes', () => {
-    const mockSetState = jest.fn()
+    const mockSetTimer = jest.fn()
 
     const { rerender } = render(<TurnChange {...defaultProps} winner={null} />, {
       contextValue: {
         timer: 30,
-        setState: mockSetState,
+        setTimer: mockSetTimer,
       },
     })
 
@@ -120,11 +120,11 @@ describe('TurnChange Component', () => {
     rerender(<TurnChange {...defaultProps} winner="player-1" />, {
       contextValue: {
         timer: 30,
-        setState: mockSetState,
+        setTimer: mockSetTimer,
       },
     })
 
-    // setState should be called to reset timer
-    expect(mockSetState).toHaveBeenCalledWith({ timer: 60 })
+    // setTimer should be called to reset timer
+    expect(mockSetTimer).toHaveBeenCalledWith(60)
   })
 })
