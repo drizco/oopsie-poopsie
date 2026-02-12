@@ -9,9 +9,10 @@
       }
     },
     "players": {
+      ".read": "auth != null",
+      ".indexOn": ["gameId"],
       "$playerId": {
-        ".read": "auth != null",
-        ".indexOn": ["gameId"]
+        ".read": "auth != null"
       }
     },
     "rounds": {
