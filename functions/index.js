@@ -15,6 +15,12 @@ import {
 
 admin.initializeApp()
 
+// Use emulator in development
+if (process.env.FUNCTIONS_EMULATOR === "true") {
+  process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099"
+  process.env.FIREBASE_DATABASE_EMULATOR_HOST = "127.0.0.1:9000"
+}
+
 const ref = (path) => (path ? admin.database().ref(path) : admin.database().ref())
 
 const app = express()
