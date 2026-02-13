@@ -4,25 +4,39 @@
     ".write": false,
     "games": {
       "$gameId": {
-        ".read": "auth != null",
-        ".indexOn": ["timestamp"]
-      }
-    },
-    "players": {
-      ".read": "auth != null",
-      ".indexOn": ["gameId"],
-      "$playerId": {
-        ".read": "auth != null"
-      }
-    },
-    "rounds": {
-      ".read": "auth != null",
-      ".indexOn": ["gameId"]
-    },
-    "hands": {
-      "$playerId": {
-        ".read": "auth != null && data.child('uid').val() === auth.uid",
-        ".indexOn": ["gameId"]
+        ".indexOn": ["metadata/timestamp"],
+        "metadata": {
+          ".read": "auth != null"
+        },
+        "settings": {
+          ".read": "auth != null"
+        },
+        "state": {
+          ".read": "auth != null"
+        },
+        "players": {
+          ".read": "auth != null",
+          "$playerId": {
+            ".read": "auth != null",
+            "hands": {
+              ".read": false,
+              "$roundId": {
+                ".read": "auth != null"
+              }
+            }
+          }
+        },
+        "rounds": {
+          "$roundId": {
+            ".read": "auth != null",
+            "bids": {
+              ".read": "auth != null"
+            },
+            "tricks": {
+              ".read": "auth != null"
+            }
+          }
+        }
       }
     }
   }

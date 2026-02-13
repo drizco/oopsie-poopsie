@@ -75,13 +75,17 @@ export const getScore = (tricks) =>
     return newScoreObj
   }, {})
 
-export const getNextPlayer = ({ playerId, players }) => {
-  const playerIndex = players.findIndex((p) => p.playerId === playerId)
-  let nextPlayerIndex = playerIndex + 1
-  if (nextPlayerIndex === players.length) {
-    nextPlayerIndex = 0
-  }
-  return players[nextPlayerIndex].playerId
+export const getNextPlayerIndex = ({ currentPlayerIndex, playerOrder }) => {
+  return (currentPlayerIndex + 1) % playerOrder.length
+}
+
+export const getNextPlayerId = ({ currentPlayerIndex, playerOrder }) => {
+  const nextIndex = getNextPlayerIndex({ currentPlayerIndex, playerOrder })
+  return playerOrder[nextIndex]
+}
+
+export const getCurrentPlayerId = ({ currentPlayerIndex, playerOrder }) => {
+  return playerOrder[currentPlayerIndex]
 }
 
 export const getWinner = ({ winner, players }) => players[winner].name

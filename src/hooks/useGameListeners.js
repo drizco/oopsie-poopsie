@@ -1,5 +1,5 @@
 import { useCallback, useRef, useMemo } from 'react'
-import { ref, query, orderByChild, equalTo } from 'firebase/database'
+import { ref } from 'firebase/database'
 import { db } from '../lib/firebase'
 import useFirebaseListener from './useFirebaseListener'
 import { calculateAdjustedBid } from '../utils/bidHelpers'
@@ -52,8 +52,7 @@ const useGameListeners = ({
 
   // Players
   const playersRef = useMemo(
-    () =>
-      gameId ? query(ref(db, 'players'), orderByChild('gameId'), equalTo(gameId)) : null,
+    () => (gameId ? ref(db, `games/${gameId}/players`) : null),
     [gameId]
   )
 
@@ -133,8 +132,10 @@ const useGameListeners = ({
   // Hand
   const handRef = useMemo(
     () =>
-      playerId && roundId ? ref(db, `hands/${playerId}/rounds/${roundId}/cards`) : null,
-    [playerId, roundId]
+      playerId && roundId && gameId
+        ? ref(db, `games/${gameId}/players/${playerId}/hands/${roundId}/cards`)
+        : null,
+    [playerId, roundId, gameId]
   )
 
   useFirebaseListener({
@@ -189,8 +190,8 @@ const useGameListeners = ({
 
   // Trump
   const trumpRef = useMemo(
-    () => (roundId ? ref(db, `rounds/${roundId}/trump`) : null),
-    [roundId]
+    () => (roundId && gameId ? ref(db, `games/${gameId}/rounds/${roundId}/trump`) : null),
+    [roundId, gameId]
   )
 
   useFirebaseListener({
@@ -215,8 +216,9 @@ const useGameListeners = ({
 
   // Tricks
   const tricksRef = useMemo(
-    () => (roundId ? ref(db, `rounds/${roundId}/tricks`) : null),
-    [roundId]
+    () =>
+      roundId && gameId ? ref(db, `games/${gameId}/rounds/${roundId}/tricks`) : null,
+    [roundId, gameId]
   )
 
   useFirebaseListener({
@@ -245,8 +247,8 @@ const useGameListeners = ({
 
   // Bids
   const bidsRef = useMemo(
-    () => (roundId ? ref(db, `rounds/${roundId}/bids`) : null),
-    [roundId]
+    () => (roundId && gameId ? ref(db, `games/${gameId}/rounds/${roundId}/bids`) : null),
+    [roundId, gameId]
   )
 
   useFirebaseListener({

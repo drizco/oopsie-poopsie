@@ -41,7 +41,6 @@ const useGameActions = ({
   playerId,
   playerName,
   game,
-  players,
   hand,
   bid,
   bids,
@@ -58,17 +57,19 @@ const useGameActions = ({
   // Next round - advances to the next round after all tricks are played
   const nextRound = useCallback(async () => {
     try {
-      if (!game) return
+      if (!game || !game.state) return
 
       let {
-        numCards: nc,
-        roundNum: rn,
-        descending: desc,
-        dealer: oldDealer,
-        gameId: gId,
-        numRounds,
-        roundId,
-        noBidPoints,
+        state: {
+          numCards: nc,
+          roundNum: rn,
+          descending: desc,
+          dealerIndex,
+          numRounds,
+          roundId,
+        },
+        settings: { noBidPoints },
+        metadata: { gameId: gId },
       } = game
 
       let descending = desc
@@ -80,7 +81,6 @@ const useGameActions = ({
         numCards = 2
       }
 
-      const dealer = players[oldDealer].nextPlayer
       const gameOver = roundNum > numRounds
 
       const body = {
@@ -92,7 +92,7 @@ const useGameActions = ({
         noBidPoints,
         roundId,
         gameOver,
-        dealer,
+        dealerIndex,
       }
 
       await nextRoundApi(body)
@@ -100,7 +100,7 @@ const useGameActions = ({
       setState({ error: true })
       console.error(`nextRound error:`, error)
     }
-  }, [setState, game, players])
+  }, [setState, game])
 
   // Play card - handles playing a card or queuing it for later
   const playCard = useCallback(
@@ -122,15 +122,17 @@ const useGameActions = ({
           leadSuit = trick.leadSuit
         }
 
+        const currentPlayerId =
+          game?.state?.playerOrder?.[game.state.currentPlayerIndex]
+
         if (
           game &&
-          game.status === 'play' &&
-          game.currentPlayer &&
-          game.currentPlayer === playerId &&
+          game.state?.status === 'play' &&
+          currentPlayerId === playerId &&
           isLegal({ hand, card, leadSuit })
         ) {
           const allCards = [...Object.values(trick.cards || {}), card]
-          const allCardsIn = allCards.length === game.numPlayers
+          const allCardsIn = allCards.length === game.state.numPlayers
           const isNextRound = allCardsIn && hand.length === 1
 
           let leader = calculateLeader({
@@ -142,16 +144,13 @@ const useGameActions = ({
             leader = leader.playerId
           }
 
-          const nextPlayerId = players[playerId].nextPlayer
-
           const body = {
             playerId,
-            nextPlayerId,
             card,
             leader,
             allCardsIn,
-            gameId: game.gameId,
-            roundId: game.roundId,
+            gameId: game.metadata.gameId,
+            roundId: game.state.roundId,
             trickId: trick.trickId,
             leadSuit,
             nextRound: isNextRound,
@@ -164,9 +163,8 @@ const useGameActions = ({
           }
         } else if (
           game &&
-          game.status === 'play' &&
-          game.currentPlayer &&
-          game.currentPlayer !== playerId &&
+          game.state?.status === 'play' &&
+          currentPlayerId !== playerId &&
           isLegal({ hand, card, leadSuit }) &&
           (!trick || !trick.cards || !trick.cards[playerId])
         ) {
@@ -195,7 +193,6 @@ const useGameActions = ({
       playerId,
       hand,
       trump,
-      players,
       nextRound,
       updateState,
       autoPlayTimeoutRef,
@@ -224,18 +221,14 @@ const useGameActions = ({
 
         const bidValue = optionalBid !== undefined ? optionalBid : bid
 
-        if (!game) return
+        if (!game || !game.state) return
 
-        const { numPlayers, roundId } = game
-        const allBidsIn = Object.keys(bids || {}).length === numPlayers - 1
-        const nextPlayerId = players[playerId].nextPlayer
+        const { roundId } = game.state
 
         const body = {
           gameId,
           playerId,
-          nextPlayerId,
           bid: bidValue,
-          allBidsIn,
           roundId,
         }
 
@@ -246,14 +239,14 @@ const useGameActions = ({
         console.error(`submitBid error:`, error)
       }
     },
-    [bid, game, bids, players, playerId, gameId, setState]
+    [bid, game, playerId, gameId, setState]
   )
 
   // Random play - plays a random legal card or bids randomly
   const randomPlay = useCallback(() => {
     if (!game) return
 
-    const { status } = game
+    const status = game.state?.status
 
     if (status === 'play') {
       let handCopy = [...hand]
@@ -281,23 +274,19 @@ const useGameActions = ({
   // Play again - creates a new game with the same settings
   const playAgain = useCallback(async () => {
     try {
-      if (!game) return
+      if (!game || !game.metadata || !game.settings) return
       setState({ loading: true })
 
       const {
-        name,
-        numCards,
-        noBidPoints,
-        dirty,
-        timeLimit,
-        gameId: currentGameId,
+        metadata: { name, gameId: currentGameId },
+        settings: { numCards, noBidPoints, dirty, timeLimit },
       } = game
 
       const body = {
         game: name,
         name: playerName,
         numCards,
-        noBidPoints,
+        bidPoints: !noBidPoints,
         dirty,
         timeLimit: timeLimit ? Number(timeLimit) : null,
       }

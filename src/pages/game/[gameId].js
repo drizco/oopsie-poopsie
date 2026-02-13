@@ -52,7 +52,7 @@ function Game({ gameId, isMobile }) {
   const { removeListeners } = useGameListeners({
     gameId,
     playerId,
-    roundId: game?.roundId,
+    roundId: game?.state?.roundId,
     updateState,
     dispatchRound,
     context,
@@ -64,7 +64,6 @@ function Game({ gameId, isMobile }) {
     playerId,
     playerName,
     game,
-    players,
     hand,
     bid,
     bids,
@@ -118,15 +117,23 @@ function Game({ gameId, isMobile }) {
   // Effect: Reset round state when roundId changes (new round starts)
   const prevRoundId = useRef(null)
   useEffect(() => {
-    if (game?.roundId && prevRoundId.current && prevRoundId.current !== game.roundId) {
+    if (
+      game?.state?.roundId &&
+      prevRoundId.current &&
+      prevRoundId.current !== game.state.roundId
+    ) {
+      // Reset round state (tricks, bids, trump)
       dispatchRound({ type: 'RESET' })
+      // Clear hand from previous round
+      updateState({ hand: [], bid: 0 })
     }
-    prevRoundId.current = game?.roundId
-  }, [game?.roundId, dispatchRound])
+    prevRoundId.current = game?.state?.roundId
+  }, [game?.state?.roundId, dispatchRound, updateState])
 
   // Handle "your turn" logic
   useEffect(() => {
-    if (game && game.currentPlayer === playerId && game.status === 'play') {
+    const currentPlayerId = game?.state?.playerOrder?.[game.state.currentPlayerIndex]
+    if (game && currentPlayerId === playerId && game.state?.status === 'play') {
       yourTurn()
     }
   }, [game, playerId, yourTurn])
@@ -134,11 +141,15 @@ function Game({ gameId, isMobile }) {
   // Interval for random play (if needed)
   useInterval(
     () => {
-      if (game && game.currentPlayer === playerId) {
+      const currentPlayerId = game?.state?.playerOrder?.[game.state.currentPlayerIndex]
+      if (game && currentPlayerId === playerId) {
         randomPlay()
       }
     },
-    game?.autoPlay && game?.currentPlayer === playerId ? 1000 : null
+    game?.state?.autoPlay &&
+      game?.state?.playerOrder?.[game.state.currentPlayerIndex] === playerId
+      ? 1000
+      : null
   )
 
   // Render logic
@@ -152,22 +163,32 @@ function Game({ gameId, isMobile }) {
     )
   }
 
-  const {
-    status,
-    currentPlayer,
-    dark,
-    dealer,
-    score,
-    roundNum,
-    numRounds,
-    numCards,
-    name,
-    timer,
-    nextGame,
-    timeLimit,
-  } = game
+  const status = game.state?.status
+  const currentPlayerIndex = game.state?.currentPlayerIndex
+  const playerOrder = game.state?.playerOrder || []
+  const currentPlayer = playerOrder[currentPlayerIndex]
+  const dark = game.state?.dark
+  const dealerIndex = game.state?.dealerIndex
+  const dealer = playerOrder[dealerIndex]
+  const roundNum = game.state?.roundNum
+  const numRounds = game.state?.numRounds
+  const numCards = game.state?.numCards || game.settings?.numCards
+  const name = game.metadata?.name
+  const timer = game.state?.timer
+  const nextGame = game.state?.nextGame
+  const timeLimit = game.settings?.timeLimit
 
   const timerShowMax = timeLimit > 10 ? 10 : 5
+
+  // Score is now under players
+  const score = {}
+  if (players) {
+    Object.values(players).forEach((player) => {
+      if (player.score !== undefined) {
+        score[player.playerId] = player.score
+      }
+    })
+  }
 
   return (
     <>

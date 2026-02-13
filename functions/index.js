@@ -13,13 +13,13 @@ import {
   updatePlayer,
 } from './game.js'
 
-admin.initializeApp()
-
-// Use emulator in development
+// Use emulator in development - MUST be set BEFORE admin.initializeApp()
 if (process.env.FUNCTIONS_EMULATOR === 'true') {
   process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099'
   process.env.FIREBASE_DATABASE_EMULATOR_HOST = '127.0.0.1:9000'
 }
+
+admin.initializeApp()
 
 const ref = (path) => (path ? admin.database().ref(path) : admin.database().ref())
 
@@ -70,7 +70,7 @@ export const clearOldGameData = functions.pubsub
     const date = new Date()
     date.setDate(date.getDate() - 7)
     const gameSnap = await ref('games')
-      .orderByChild('timestamp')
+      .orderByChild('metadata/timestamp')
       .endAt(date.toISOString())
       .once('value')
 
@@ -79,26 +79,9 @@ export const clearOldGameData = functions.pubsub
 
       const promiseArray = []
       gameSnap.forEach((snap) => {
-        const game = snap.val()
-        const gameId = snap.key
-        promiseArray.push(
-          ref(`hands`)
-            .orderByChild('gameId')
-            .equalTo(gameId)
-            .once('value')
-            .then((snap) => snap.ref.remove()),
-          ref(`players`)
-            .orderByChild('gameId')
-            .equalTo(gameId)
-            .once('value')
-            .then((snap) => snap.ref.remove()),
-          ref(`rounds`)
-            .orderByChild('gameId')
-            .equalTo(gameId)
-            .once('value')
-            .then((snap) => snap.ref.remove()),
-          snap.ref.remove()
-        )
+        // With nested schema, deleting game node removes everything:
+        // players, rounds, tricks, bids, hands all cascade
+        promiseArray.push(snap.ref.remove())
       })
       await Promise.all(promiseArray)
     } else {
