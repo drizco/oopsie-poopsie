@@ -8,7 +8,6 @@ import {
   replayGame,
   submitBid,
   playCard,
-  nextRound,
   newGame,
   updatePlayer,
 } from './game.js'
@@ -58,7 +57,6 @@ app.post('/start-game', startGame)
 app.post('/replay-game', replayGame)
 app.post('/submit-bid', submitBid)
 app.post('/play-card', playCard)
-app.post('/next-round', nextRound)
 app.put('/update-player/:playerId/:gameId/:present', updatePlayer)
 
 export const api = functions.https.onRequest(app)

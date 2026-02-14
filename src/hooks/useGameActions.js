@@ -6,9 +6,8 @@ import {
   playCard as playCardApi,
   submitBid as submitBidApi,
   addPlayer as addPlayerApi,
-  nextRound as nextRoundApi,
 } from '../utils/api'
-import { calculateLeader, isLegal } from '../utils/helpers'
+import { isLegal } from '../utils/helpers'
 import { calculateAdjustedBid } from '../utils/bidHelpers'
 
 /**
@@ -27,7 +26,6 @@ import { calculateAdjustedBid } from '../utils/bidHelpers'
  * @param {Object} options.bids - All bids
  * @param {Array} options.tricks - Array of tricks
  * @param {number} options.trickIndex - Current trick index
- * @param {string} options.trump - Trump suit
  * @param {Object} options.queuedCard - Queued card for auto-play
  * @param {boolean} options.visible - Page visibility state
  * @param {Function} options.setState - Context setState function
@@ -46,7 +44,6 @@ const useGameActions = ({
   bids,
   tricks,
   trickIndex,
-  trump,
   queuedCard,
   visible,
   setState,
@@ -54,54 +51,6 @@ const useGameActions = ({
   dispatchRound,
   autoPlayTimeoutRef,
 }) => {
-  // Next round - advances to the next round after all tricks are played
-  const nextRound = useCallback(async () => {
-    try {
-      if (!game || !game.state) return
-
-      let {
-        state: {
-          numCards: nc,
-          roundNum: rn,
-          descending: desc,
-          dealerIndex,
-          numRounds,
-          roundId,
-        },
-        settings: { noBidPoints },
-        metadata: { gameId: gId },
-      } = game
-
-      let descending = desc
-      const roundNum = rn + 1
-      let numCards = descending ? nc - 1 : nc + 1
-
-      if (numCards < 1) {
-        descending = false
-        numCards = 2
-      }
-
-      const gameOver = roundNum > numRounds
-
-      const body = {
-        roundNum,
-        numRounds,
-        numCards,
-        descending,
-        gameId: gId,
-        noBidPoints,
-        roundId,
-        gameOver,
-        dealerIndex,
-      }
-
-      await nextRoundApi(body)
-    } catch (error) {
-      setState({ error: true })
-      console.error(`nextRound error:`, error)
-    }
-  }, [setState, game])
-
   // Play card - handles playing a card or queuing it for later
   const playCard = useCallback(
     async (card) => {
@@ -110,64 +59,15 @@ const useGameActions = ({
           clearTimeout(autoPlayTimeoutRef.current)
         }
 
-        setState({ loading: true })
+        if (!game || !game.state || !game.metadata) {
+          return
+        }
 
         const trick = tricks[trickIndex]
-        let leadSuit
+        const currentPlayerId = game.state.playerOrder?.[game.state.currentPlayerIndex]
 
-        if (!trick || !trick.cards || !Object.values(trick.cards).length) {
-          leadSuit = card.suit
-        }
-        if (trick?.leadSuit) {
-          leadSuit = trick.leadSuit
-        }
-
-        const currentPlayerId =
-          game?.state?.playerOrder?.[game.state.currentPlayerIndex]
-
-        if (
-          game &&
-          game.state?.status === 'play' &&
-          currentPlayerId === playerId &&
-          isLegal({ hand, card, leadSuit })
-        ) {
-          const allCards = [...Object.values(trick.cards || {}), card]
-          const allCardsIn = allCards.length === game.state.numPlayers
-          const isNextRound = allCardsIn && hand.length === 1
-
-          let leader = calculateLeader({
-            cards: allCards,
-            trump,
-            leadSuit: leadSuit || trick.leadSuit,
-          })
-          if (leader) {
-            leader = leader.playerId
-          }
-
-          const body = {
-            playerId,
-            card,
-            leader,
-            allCardsIn,
-            gameId: game.metadata.gameId,
-            roundId: game.state.roundId,
-            trickId: trick.trickId,
-            leadSuit,
-            nextRound: isNextRound,
-          }
-
-          await playCardApi(body)
-
-          if (isNextRound) {
-            await nextRound()
-          }
-        } else if (
-          game &&
-          game.state?.status === 'play' &&
-          currentPlayerId !== playerId &&
-          isLegal({ hand, card, leadSuit }) &&
-          (!trick || !trick.cards || !trick.cards[playerId])
-        ) {
+        if (currentPlayerId !== playerId) {
+          // Not our turn - queue the card for later auto-play
           updateState((prevState) => {
             let newCard = card
             if (prevState.queuedCard && prevState.queuedCard.cardId === card.cardId) {
@@ -177,8 +77,19 @@ const useGameActions = ({
               queuedCard: newCard,
             }
           })
+          return
         }
 
+        const body = {
+          playerId,
+          card,
+          gameId: game.metadata.gameId,
+          roundId: game.state.roundId,
+          trickId: trick.trickId,
+        }
+
+        setState({ loading: true })
+        await playCardApi(body)
         setState({ loading: false })
       } catch (error) {
         setState({ loading: false, error: true })
@@ -191,9 +102,6 @@ const useGameActions = ({
       trickIndex,
       game,
       playerId,
-      hand,
-      trump,
-      nextRound,
       updateState,
       autoPlayTimeoutRef,
     ]
@@ -371,7 +279,6 @@ const useGameActions = ({
   }, [game, dispatchRound])
 
   return {
-    nextRound,
     playCard,
     yourTurn,
     submitBid,

@@ -53,13 +53,6 @@ export const playCard = async (body) =>
     body: JSON.stringify(body),
   })
 
-export const nextRound = async (body) =>
-  fetch(`${API_BASE_URL}/next-round`, {
-    method: 'POST',
-    headers: await getAuthHeaders(),
-    body: JSON.stringify(body),
-  })
-
 export const submitBid = async (body) =>
   fetch(`${API_BASE_URL}/submit-bid`, {
     method: 'POST',

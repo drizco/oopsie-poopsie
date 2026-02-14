@@ -69,7 +69,6 @@ function Game({ gameId, isMobile }) {
     bids,
     tricks,
     trickIndex,
-    trump,
     queuedCard,
     visible,
     setState,

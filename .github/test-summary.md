@@ -86,7 +86,6 @@ open coverage-functions/index.html
 - ✅ `startGame()` - Game start logic
 - ✅ `submitBid()` - Bidding
 - ✅ `playCard()` - Card play
-- ✅ `nextRound()` - Round transitions
 - ✅ `replayGame()` - Game replay
 - ✅ `updatePlayer()` - Player presence
 
