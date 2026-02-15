@@ -113,22 +113,6 @@ function Game({ gameId, isMobile }) {
     initializeGame()
   }, [gameId, initializeGame])
 
-  // Effect: Reset round state when roundId changes (new round starts)
-  const prevRoundId = useRef(null)
-  useEffect(() => {
-    if (
-      game?.state?.roundId &&
-      prevRoundId.current &&
-      prevRoundId.current !== game.state.roundId
-    ) {
-      // Reset round state (tricks, bids, trump)
-      dispatchRound({ type: 'RESET' })
-      // Clear hand from previous round
-      updateState({ hand: [], bid: 0 })
-    }
-    prevRoundId.current = game?.state?.roundId
-  }, [game?.state?.roundId, dispatchRound, updateState])
-
   // Handle "your turn" logic
   useEffect(() => {
     const currentPlayerId = game?.state?.playerOrder?.[game.state.currentPlayerIndex]

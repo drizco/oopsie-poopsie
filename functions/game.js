@@ -171,6 +171,15 @@ export const submitBid = async (req, res) => {
         .then((snap) => snap.val() || {}),
     ])
 
+    const currentPlayerId = playerOrder[currentPlayerIndex]
+    if (currentPlayerId !== playerId) {
+      return res.status(400).json({ error: 'Not your turn' })
+    }
+
+    if (currentBids[playerId] !== undefined) {
+      return res.status(400).json({ error: 'Already submitted bid' })
+    }
+
     const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length
     const numPlayers = playerOrder.length
 

@@ -43,6 +43,8 @@ const useGameListeners = ({
   const setContextState = context.setState
   // Store all unsubscribe functions
   const unsubscribeFuncs = useRef([])
+  // Track previous roundId to detect round changes
+  const prevRoundIdRef = useRef(null)
 
   // Remove all listeners
   const removeListeners = useCallback(() => {
@@ -92,11 +94,26 @@ const useGameListeners = ({
       (snapshot) => {
         const value = snapshot.val()
         const key = snapshot.key
+
+        if (
+          key === 'state' &&
+          value?.roundId &&
+          prevRoundIdRef.current &&
+          prevRoundIdRef.current !== value.roundId
+        ) {
+          updateState({ hand: [], bid: 0 })
+          dispatchRound({ type: 'RESET' })
+        }
+
+        if (key === 'state' && value?.roundId) {
+          prevRoundIdRef.current = value.roundId
+        }
+
         updateState((prevState) => ({
           game: { ...prevState.game, [key]: value },
         }))
       },
-      [updateState]
+      [updateState, dispatchRound]
     ),
     onError: useCallback(
       (error) => {
