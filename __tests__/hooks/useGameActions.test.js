@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 
 // Create mocks before any imports
 const mockNewGame = jest.fn()
@@ -112,30 +112,26 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            status: 'play',
-            currentPlayer: 'p1',
-            numPlayers: 3,
-            gameId: 'game-1',
-            roundId: 'round-1',
-          },
-          players: {
-            p1: { nextPlayer: 'p2' },
+            metadata: {
+              gameId: 'game-1',
+            },
+            state: {
+              status: 'play',
+              playerOrder: ['p1', 'p2', 'p3'],
+              currentPlayerIndex: 0, // p1's turn
+              roundId: 'round-1',
+            },
           },
           hand: [mockCard, { cardId: 'c3', rank: 6, suit: 'S' }],
           bid: 2,
           bids: {},
           tricks: [mockTrick],
           trickIndex: 0,
-          trump: 'D',
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -146,15 +142,10 @@ describe('useGameActions Hook', () => {
       expect(mockContext.setState).toHaveBeenCalledWith({ loading: true })
       expect(mockPlayCardApi).toHaveBeenCalledWith({
         playerId: 'p1',
-        nextPlayerId: 'p2',
         card: mockCard,
-        leader: 'p1',
-        allCardsIn: false,
         gameId: 'game-1',
         roundId: 'round-1',
         trickId: 1,
-        leadSuit: 'H',
-        nextRound: false,
       })
       expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
     })
@@ -173,30 +164,26 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            status: 'play',
-            currentPlayer: 'p2', // Not player's turn
-            numPlayers: 3,
-            gameId: 'game-1',
-            roundId: 'round-1',
-          },
-          players: {
-            p1: { nextPlayer: 'p2' },
+            metadata: {
+              gameId: 'game-1',
+            },
+            state: {
+              status: 'play',
+              playerOrder: ['p2', 'p1', 'p3'],
+              currentPlayerIndex: 0, // p2's turn, not p1
+              roundId: 'round-1',
+            },
           },
           hand: [mockCard],
           bid: 2,
           bids: {},
           tricks: [mockTrick],
           trickIndex: 0,
-          trump: 'D',
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -208,7 +195,7 @@ describe('useGameActions Hook', () => {
       expect(mockUpdateState).toHaveBeenCalled()
     })
 
-    test('calls nextRound when last card is played', async () => {
+    test('plays last card successfully', async () => {
       const mockCard = { cardId: 'c1', rank: 5, suit: 'H' }
       const mockTrick = {
         trickId: 1,
@@ -222,35 +209,26 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            status: 'play',
-            currentPlayer: 'p1',
-            numPlayers: 3,
-            gameId: 'game-1',
-            roundId: 'round-1',
-            roundNum: 1,
-            numRounds: 10,
-            descending: false,
-            dealer: 'p1',
-            noBidPoints: 5,
-          },
-          players: {
-            p1: { nextPlayer: 'p2' },
+            metadata: {
+              gameId: 'game-1',
+            },
+            state: {
+              status: 'play',
+              playerOrder: ['p1', 'p2', 'p3'],
+              currentPlayerIndex: 0,
+              roundId: 'round-1',
+            },
           },
           hand: [mockCard], // Last card
           bid: 2,
           bids: {},
           tricks: [mockTrick],
           trickIndex: 0,
-          trump: 'D',
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -258,9 +236,8 @@ describe('useGameActions Hook', () => {
         await result.current.playCard(mockCard)
       })
 
-      await waitFor(() => {
-        expect(mockNextRoundApi).toHaveBeenCalled()
-      })
+      expect(mockPlayCardApi).toHaveBeenCalled()
+      expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
     })
 
     test('handles errors correctly', async () => {
@@ -279,30 +256,26 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            status: 'play',
-            currentPlayer: 'p1',
-            numPlayers: 3,
-            gameId: 'game-1',
-            roundId: 'round-1',
-          },
-          players: {
-            p1: { nextPlayer: 'p2' },
+            metadata: {
+              gameId: 'game-1',
+            },
+            state: {
+              status: 'play',
+              playerOrder: ['p1', 'p2', 'p3'],
+              currentPlayerIndex: 0,
+              roundId: 'round-1',
+            },
           },
           hand: [mockCard],
           bid: 2,
           bids: {},
           tricks: [mockTrick],
           trickIndex: 0,
-          trump: 'D',
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -325,8 +298,9 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            numPlayers: 3,
-            roundId: 'round-1',
+            state: {
+              roundId: 'round-1',
+            },
           },
           players: {
             p1: { nextPlayer: 'p2' },
@@ -336,16 +310,11 @@ describe('useGameActions Hook', () => {
           bids: { p2: 2 },
           tricks: [],
           trickIndex: 0,
-          trump: null,
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -357,9 +326,7 @@ describe('useGameActions Hook', () => {
       expect(mockSubmitBidApi).toHaveBeenCalledWith({
         gameId: 'game-1',
         playerId: 'p1',
-        nextPlayerId: 'p2',
         bid: 3,
-        allBidsIn: false,
         roundId: 'round-1',
       })
       expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
@@ -372,8 +339,9 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            numPlayers: 3,
-            roundId: 'round-1',
+            state: {
+              roundId: 'round-1',
+            },
           },
           players: {
             p1: { nextPlayer: 'p2' },
@@ -383,16 +351,11 @@ describe('useGameActions Hook', () => {
           bids: {},
           tricks: [],
           trickIndex: 0,
-          trump: null,
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -400,53 +363,12 @@ describe('useGameActions Hook', () => {
         await result.current.submitBid(5)
       })
 
-      expect(mockSubmitBidApi).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bid: 5,
-        })
-      )
-    })
-
-    test('sets allBidsIn when all other players have bid', async () => {
-      const { result } = renderHook(() =>
-        useGameActions({
-          gameId: 'game-1',
-          playerId: 'p1',
-          playerName: 'Player 1',
-          game: {
-            numPlayers: 3,
-            roundId: 'round-1',
-          },
-          players: {
-            p1: { nextPlayer: 'p2' },
-          },
-          hand: [],
-          bid: 3,
-          bids: { p2: 2, p3: 1 },
-          tricks: [],
-          trickIndex: 0,
-          trump: null,
-          queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
-          updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
-          autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
-        })
-      )
-
-      await act(async () => {
-        await result.current.submitBid()
+      expect(mockSubmitBidApi).toHaveBeenCalledWith({
+        gameId: 'game-1',
+        playerId: 'p1',
+        bid: 5,
+        roundId: 'round-1',
       })
-
-      expect(mockSubmitBidApi).toHaveBeenCalledWith(
-        expect.objectContaining({
-          allBidsIn: true,
-        })
-      )
     })
   })
 
@@ -536,29 +458,27 @@ describe('useGameActions Hook', () => {
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            name: 'Test Game',
-            numCards: 5,
-            noBidPoints: 5,
-            dirty: true,
-            timeLimit: 30,
-            gameId: 'game-1',
+            metadata: {
+              name: 'Test Game',
+              gameId: 'game-1',
+            },
+            settings: {
+              numCards: 5,
+              noBidPoints: 5,
+              dirty: true,
+              timeLimit: 30,
+            },
           },
-          players: {},
           hand: [],
           bid: 0,
           bids: {},
           tricks: [],
           trickIndex: 0,
-          trump: null,
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -725,31 +645,27 @@ describe('useGameActions Hook', () => {
       expect(mockCalculateAdjustedBid).toHaveBeenCalled()
     })
 
-    test('closeModal hides winner modal and re-initializes listeners', async () => {
+    test('closeModal clears lastWinner', async () => {
       const { result } = renderHook(() =>
         useGameActions({
           gameId: 'game-1',
           playerId: 'p1',
           playerName: 'Player 1',
           game: {
-            roundId: 'round-1',
+            state: {
+              roundId: 'round-1',
+            },
           },
-          players: {},
           hand: [],
           bid: 0,
           bids: {},
           tricks: [],
           trickIndex: 0,
-          trump: null,
           queuedCard: null,
           visible: mockContext.visible,
           setState: mockContext.setState,
           updateState: mockUpdateState,
-          dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
-          listenToGame: mockListenToGame,
-          listenToRound: mockListenToRound,
-          listenToHand: mockListenToHand,
         })
       )
 
@@ -757,8 +673,8 @@ describe('useGameActions Hook', () => {
         await result.current.closeModal()
       })
 
-      expect(mockDispatchRound).toHaveBeenCalledWith({
-        type: 'HIDE_WINNER_MODAL',
+      expect(mockUpdateState).toHaveBeenCalledWith({
+        lastWinner: null,
       })
     })
 

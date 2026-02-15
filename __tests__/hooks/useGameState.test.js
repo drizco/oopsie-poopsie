@@ -61,6 +61,7 @@ describe('useGameState Hook', () => {
         bid: 0,
         showYourTurn: false,
         queuedCard: null,
+        lastWinner: null,
       })
     })
 
@@ -71,7 +72,6 @@ describe('useGameState Hook', () => {
         tricks: [],
         bids: {},
         trump: null,
-        showWinnerModal: false,
       })
     })
 
@@ -158,6 +158,7 @@ describe('useGameState Hook', () => {
         bid: 5,
         showYourTurn: false,
         queuedCard: null,
+        lastWinner: null,
       })
     })
   })
@@ -179,7 +180,6 @@ describe('useGameState Hook', () => {
       expect(result.current.roundState.tricks).toEqual([{ trickId: 1 }])
       expect(result.current.roundState.bids).toEqual({ p1: 3 })
       expect(result.current.roundState.trump).toBe('H')
-      expect(result.current.roundState.showWinnerModal).toBe(false)
     })
 
     test('dispatches SET_TRICKS action', () => {
@@ -244,26 +244,6 @@ describe('useGameState Hook', () => {
       })
     })
 
-    test('sets showWinnerModal when trick has winner', () => {
-      const { result } = renderHook(() => useGameState({ gameId: 'game-1' }))
-
-      act(() => {
-        result.current.dispatchRound({
-          type: 'SET_TRICKS',
-          tricks: [{ trickId: 1, cards: {} }],
-        })
-      })
-
-      act(() => {
-        result.current.dispatchRound({
-          type: 'UPDATE_TRICK',
-          trick: { trickId: 1, winner: 'player-1' },
-        })
-      })
-
-      expect(result.current.roundState.showWinnerModal).toBe(true)
-    })
-
     test('dispatches SET_BIDS action', () => {
       const { result } = renderHook(() => useGameState({ gameId: 'game-1' }))
 
@@ -304,32 +284,6 @@ describe('useGameState Hook', () => {
       expect(result.current.roundState.trump).toBe('S')
     })
 
-    test('dispatches SHOW_WINNER_MODAL action', () => {
-      const { result } = renderHook(() => useGameState({ gameId: 'game-1' }))
-
-      act(() => {
-        result.current.dispatchRound({ type: 'SHOW_WINNER_MODAL' })
-      })
-
-      expect(result.current.roundState.showWinnerModal).toBe(true)
-    })
-
-    test('dispatches HIDE_WINNER_MODAL action', () => {
-      const { result } = renderHook(() => useGameState({ gameId: 'game-1' }))
-
-      act(() => {
-        result.current.dispatchRound({ type: 'SHOW_WINNER_MODAL' })
-      })
-
-      expect(result.current.roundState.showWinnerModal).toBe(true)
-
-      act(() => {
-        result.current.dispatchRound({ type: 'HIDE_WINNER_MODAL' })
-      })
-
-      expect(result.current.roundState.showWinnerModal).toBe(false)
-    })
-
     test('dispatches RESET action', () => {
       const { result } = renderHook(() => useGameState({ gameId: 'game-1' }))
 
@@ -341,7 +295,6 @@ describe('useGameState Hook', () => {
           bids: { p1: 3 },
           trump: 'H',
         })
-        result.current.dispatchRound({ type: 'SHOW_WINNER_MODAL' })
       })
 
       // Reset
@@ -353,7 +306,6 @@ describe('useGameState Hook', () => {
         tricks: [],
         bids: {},
         trump: null,
-        showWinnerModal: false,
       })
     })
   })
@@ -445,7 +397,6 @@ describe('useGameState Hook', () => {
         tricks: [],
         bids: {},
         trump: null,
-        showWinnerModal: false,
       })
     })
   })
@@ -478,6 +429,7 @@ describe('useGameState Hook', () => {
         bid: 0,
         showYourTurn: false,
         queuedCard: null,
+        lastWinner: null,
       })
     })
 
@@ -503,7 +455,6 @@ describe('useGameState Hook', () => {
         tricks: [],
         bids: {},
         trump: null,
-        showWinnerModal: false,
       })
     })
   })

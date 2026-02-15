@@ -84,17 +84,14 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
 
-      // Find the players listener call (first call with query)
+      // Find the players listener call
       const playersCall = mockUseFirebaseListener.mock.calls.find((call) => {
         const config = call[0]
-        return config.ref?._path === 'players' && config.ref?._query
+        return config.ref?._path === 'games/game-1/players'
       })
 
       expect(playersCall).toBeDefined()
@@ -111,9 +108,6 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
@@ -121,7 +115,7 @@ describe('useGameListeners Hook', () => {
       // Get the onData callback from players listener
       const playersCall = mockUseFirebaseListener.mock.calls.find((call) => {
         const config = call[0]
-        return config.ref?._path === 'players' && config.ref?._query
+        return config.ref?._path === 'games/game-1/players'
       })
 
       const { onData } = playersCall[0]
@@ -145,17 +139,16 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
 
       // Players listener should have enabled: false when gameId is null
-      const allCalls = mockUseFirebaseListener.mock.calls
-      const playersListenerCall = allCalls[0] // First call is players
-      expect(playersListenerCall[0].enabled).toBe(false)
+      const playersCall = mockUseFirebaseListener.mock.calls.find((call) => {
+        const config = call[0]
+        return config.ref === null || config.ref?._path?.includes('players')
+      })
+      expect(playersCall[0].enabled).toBe(false)
     })
   })
 
@@ -168,20 +161,18 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
 
-      // Find game listener calls
+      // Find game listener calls (should be exactly at games/game-1, not including sub-paths)
       const gameCalls = mockUseFirebaseListener.mock.calls.filter((call) => {
         const config = call[0]
-        return config.ref?.toString().includes('games/game-1')
+        const path = config.ref?._path || config.ref?.toString()
+        return path === 'games/game-1'
       })
 
-      // After consolidation: 2 calls (update array + removal)
+      // Should have 2 calls: one for child_added/child_changed, one for child_removed
       expect(gameCalls.length).toBe(2)
 
       // First call should be the consolidated update events (array)
@@ -252,7 +243,8 @@ describe('useGameListeners Hook', () => {
 
       const handCalls = mockUseFirebaseListener.mock.calls.filter((call) => {
         const config = call[0]
-        return config.ref?.toString().includes('hands/player-1/rounds/round-1')
+        const path = config.ref?._path || config.ref?.toString()
+        return path === 'games/game-1/players/player-1/hands/round-1/cards'
       })
 
       expect(handCalls.length).toBe(2) // child_added, child_removed
@@ -270,16 +262,14 @@ describe('useGameListeners Hook', () => {
           roundId: 'round-1',
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
 
       const handCalls = mockUseFirebaseListener.mock.calls.filter((call) => {
         const config = call[0]
-        return config.ref?.toString().includes('hands/') && config.enabled === true
+        const path = config.ref?._path || config.ref?.toString()
+        return path && path.includes('hands/') && config.enabled === true
       })
 
       expect(handCalls.length).toBe(0)
@@ -293,17 +283,16 @@ describe('useGameListeners Hook', () => {
           roundId: 'round-1',
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          game: {},
-          players: {},
-          bid: 0,
           context: mockContext,
         })
       )
 
       const handAddedCall = mockUseFirebaseListener.mock.calls.find((call) => {
         const config = call[0]
+        const path = config.ref?._path || config.ref?.toString()
         return (
-          config.ref?.toString().includes('hands/') && config.eventType === 'child_added'
+          path === 'games/game-1/players/player-1/hands/round-1/cards' &&
+          config.eventType === 'child_added'
         )
       })
 

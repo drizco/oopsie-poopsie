@@ -3,14 +3,14 @@ import {
   isLegal,
   calculateLeader,
   getScore,
-  getNextPlayer,
+  getNextPlayerId,
+  getNextPlayerIndex,
   calculateGameScore,
   getAvailableTricks,
   handleDirtyGame,
   getColor,
   getSource,
 } from '@/utils/helpers'
-import { mockPlayers } from '../fixtures/gameData'
 
 describe('Utility Helpers', () => {
   describe('isLegal', () => {
@@ -151,33 +151,57 @@ describe('Utility Helpers', () => {
     })
   })
 
-  describe('getNextPlayer', () => {
-    test('should return next player in list', () => {
-      const nextId = getNextPlayer({
-        playerId: 'player-1',
-        players: mockPlayers,
+  describe('getNextPlayerId', () => {
+    test('should return next player id in order', () => {
+      const playerOrder = ['player-1', 'player-2', 'player-3']
+      const nextId = getNextPlayerId({
+        currentPlayerIndex: 0,
+        playerOrder,
       })
 
       expect(nextId).toBe('player-2')
     })
 
     test('should wrap around to first player', () => {
-      const nextId = getNextPlayer({
-        playerId: 'player-3',
-        players: mockPlayers,
+      const playerOrder = ['player-1', 'player-2', 'player-3']
+      const nextId = getNextPlayerId({
+        currentPlayerIndex: 2,
+        playerOrder,
       })
 
       expect(nextId).toBe('player-1')
     })
 
     test('should handle single player', () => {
-      const players = [{ playerId: 'only-player' }]
-      const nextId = getNextPlayer({
-        playerId: 'only-player',
-        players,
+      const playerOrder = ['only-player']
+      const nextId = getNextPlayerId({
+        currentPlayerIndex: 0,
+        playerOrder,
       })
 
       expect(nextId).toBe('only-player')
+    })
+  })
+
+  describe('getNextPlayerIndex', () => {
+    test('should return next player index in order', () => {
+      const playerOrder = ['player-1', 'player-2', 'player-3']
+      const nextIndex = getNextPlayerIndex({
+        currentPlayerIndex: 0,
+        playerOrder,
+      })
+
+      expect(nextIndex).toBe(1)
+    })
+
+    test('should wrap around to first index', () => {
+      const playerOrder = ['player-1', 'player-2', 'player-3']
+      const nextIndex = getNextPlayerIndex({
+        currentPlayerIndex: 2,
+        playerOrder,
+      })
+
+      expect(nextIndex).toBe(0)
     })
   })
 

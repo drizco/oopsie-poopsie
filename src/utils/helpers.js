@@ -1,21 +1,5 @@
 import { BLUE, PINK } from './constants'
 
-export const absoluteUrl = (req, setLocalhost) => {
-  let protocol = 'https:'
-  let host = req
-    ? req.headers['x-forwarded-host'] || req.headers['host']
-    : window.location.host
-  if (host.indexOf('localhost') > -1) {
-    if (setLocalhost) host = setLocalhost
-    protocol = 'http:'
-  }
-  return {
-    protocol: protocol,
-    host: host,
-    origin: protocol + '//' + host,
-  }
-}
-
 export const getColor = (suit, dark) => {
   if (suit === 'C' || suit === 'S') {
     return dark ? BLUE : '#000'
@@ -82,10 +66,6 @@ export const getNextPlayerIndex = ({ currentPlayerIndex, playerOrder }) => {
 export const getNextPlayerId = ({ currentPlayerIndex, playerOrder }) => {
   const nextIndex = getNextPlayerIndex({ currentPlayerIndex, playerOrder })
   return playerOrder[nextIndex]
-}
-
-export const getCurrentPlayerId = ({ currentPlayerIndex, playerOrder }) => {
-  return playerOrder[currentPlayerIndex]
 }
 
 export const getWinner = ({ winner, players }) => players[winner].name

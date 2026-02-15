@@ -201,26 +201,48 @@ describe('Game Functions - submitBid', () => {
   let mockRef
   let mockReq
   let mockRes
+  let mockUpdate
 
   beforeEach(() => {
-    mockRef = jest.fn(() => ({
-      update: jest.fn(() => Promise.resolve()),
-    }))
+    mockUpdate = jest.fn(() => Promise.resolve())
+
+    // Mock ref to return different values based on path
+    mockRef = jest.fn((path) => {
+      if (path === 'games/TEST/state/playerOrder') {
+        return {
+          once: jest.fn(() =>
+            Promise.resolve({ val: () => ['player-1', 'player-2', 'player-3'] })
+          ),
+        }
+      }
+      if (path === 'games/TEST/state/currentPlayerIndex') {
+        return {
+          once: jest.fn(() => Promise.resolve({ val: () => 0 })),
+        }
+      }
+      if (path === 'games/TEST/rounds/round-1/bids') {
+        return {
+          once: jest.fn(() => Promise.resolve({ val: () => ({}) })),
+        }
+      }
+      // Default case - ref() with no args
+      return { update: mockUpdate }
+    })
 
     mockReq = {
       ref: mockRef,
       body: {
         playerId: 'player-1',
         bid: 3,
-        nextPlayerId: 'player-2',
         gameId: 'TEST',
-        allBidsIn: false,
         roundId: 'round-1',
       },
     }
 
     mockRes = {
       sendStatus: jest.fn(),
+      status: jest.fn(() => mockRes),
+      json: jest.fn(),
     }
   })
 
@@ -231,42 +253,55 @@ describe('Game Functions - submitBid', () => {
   })
 
   test('should convert bid to number', async () => {
-    const mockUpdate = jest.fn(() => Promise.resolve())
-    mockRef.mockImplementation(() => ({ update: mockUpdate }))
-
     mockReq.body.bid = '5'
     await submitBid(mockReq, mockRes)
 
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        'rounds/round-1/bids/player-1': 5,
+        'games/TEST/rounds/round-1/bids/player-1': 5,
       })
     )
   })
 
   test('should change status to play when all bids are in', async () => {
-    const mockUpdate = jest.fn(() => Promise.resolve())
-    mockRef.mockImplementation(() => ({ update: mockUpdate }))
+    // Mock bids to show 2 players have already bid (player-2 and player-3)
+    mockRef.mockImplementation((path) => {
+      if (path === 'games/TEST/state/playerOrder') {
+        return {
+          once: jest.fn(() =>
+            Promise.resolve({ val: () => ['player-1', 'player-2', 'player-3'] })
+          ),
+        }
+      }
+      if (path === 'games/TEST/state/currentPlayerIndex') {
+        return {
+          once: jest.fn(() => Promise.resolve({ val: () => 0 })),
+        }
+      }
+      if (path === 'games/TEST/rounds/round-1/bids') {
+        return {
+          once: jest.fn(() =>
+            Promise.resolve({ val: () => ({ 'player-2': 2, 'player-3': 1 }) })
+          ),
+        }
+      }
+      return { update: mockUpdate }
+    })
 
-    mockReq.body.allBidsIn = true
     await submitBid(mockReq, mockRes)
 
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        'games/TEST/status': 'play',
+        'games/TEST/state/status': 'play',
       })
     )
   })
 
   test('should not change status when not all bids are in', async () => {
-    const mockUpdate = jest.fn(() => Promise.resolve())
-    mockRef.mockImplementation(() => ({ update: mockUpdate }))
-
-    mockReq.body.allBidsIn = false
     await submitBid(mockReq, mockRes)
 
     const updateArg = mockUpdate.mock.calls[0][0]
-    expect(updateArg['games/TEST/status']).toBeUndefined()
+    expect(updateArg['games/TEST/state/status']).toBeUndefined()
   })
 
   test('should handle errors', async () => {
@@ -311,7 +346,6 @@ describe('Game Functions - updatePlayer', () => {
     await updatePlayer(mockReq, mockRes)
 
     expect(mockUpdate).toHaveBeenCalledWith({
-      gameId: 'TEST',
       present: true,
     })
     expect(mockRes.sendStatus).toHaveBeenCalledWith(200)
@@ -325,7 +359,6 @@ describe('Game Functions - updatePlayer', () => {
     await updatePlayer(mockReq, mockRes)
 
     expect(mockUpdate).toHaveBeenCalledWith({
-      gameId: 'TEST',
       present: false,
     })
   })
