@@ -1,5 +1,5 @@
 // Unit tests for Deck class
-import Deck from '../../functions/deck.js'
+import Deck from '../../functions/deck'
 
 describe('Deck', () => {
   let deck
