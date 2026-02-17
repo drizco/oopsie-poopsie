@@ -57,7 +57,8 @@ beforeAll(async () => {
 })
 
 describe('useGameActions Hook', () => {
-  let mockContext
+  let mockSetLoading
+  let mockSetError
   let mockUpdateState
   let mockDispatchRound
   let mockAutoPlayTimeout
@@ -68,10 +69,8 @@ describe('useGameActions Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockContext = {
-      setState: jest.fn(),
-      visible: false,
-    }
+    mockSetLoading = jest.fn()
+    mockSetError = jest.fn()
     mockUpdateState = jest.fn()
     mockDispatchRound = jest.fn()
     mockAutoPlayTimeout = { current: null }
@@ -128,8 +127,9 @@ describe('useGameActions Hook', () => {
           tricks: [mockTrick],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -139,7 +139,7 @@ describe('useGameActions Hook', () => {
         await result.current.playCard(mockCard)
       })
 
-      expect(mockContext.setState).toHaveBeenCalledWith({ loading: true })
+      expect(mockSetLoading).toHaveBeenCalledWith(true)
       expect(mockPlayCardApi).toHaveBeenCalledWith({
         playerId: 'p1',
         card: mockCard,
@@ -147,7 +147,7 @@ describe('useGameActions Hook', () => {
         roundId: 'round-1',
         trickId: 1,
       })
-      expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
+      expect(mockSetLoading).toHaveBeenCalledWith(false)
     })
 
     test('queues card when it is not player turn', async () => {
@@ -180,8 +180,9 @@ describe('useGameActions Hook', () => {
           tricks: [mockTrick],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -225,8 +226,9 @@ describe('useGameActions Hook', () => {
           tricks: [mockTrick],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -237,7 +239,7 @@ describe('useGameActions Hook', () => {
       })
 
       expect(mockPlayCardApi).toHaveBeenCalled()
-      expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
+      expect(mockSetLoading).toHaveBeenCalledWith(false)
     })
 
     test('handles errors correctly', async () => {
@@ -272,8 +274,9 @@ describe('useGameActions Hook', () => {
           tricks: [mockTrick],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -283,10 +286,8 @@ describe('useGameActions Hook', () => {
         await result.current.playCard(mockCard)
       })
 
-      expect(mockContext.setState).toHaveBeenCalledWith({
-        loading: false,
-        error: true,
-      })
+      expect(mockSetLoading).toHaveBeenCalledWith(false)
+      expect(mockSetError).toHaveBeenCalledWith('Failed to submit bid')
     })
   })
 
@@ -311,8 +312,9 @@ describe('useGameActions Hook', () => {
           tricks: [],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -322,14 +324,14 @@ describe('useGameActions Hook', () => {
         await result.current.submitBid()
       })
 
-      expect(mockContext.setState).toHaveBeenCalledWith({ loading: true })
+      expect(mockSetLoading).toHaveBeenCalledWith(true)
       expect(mockSubmitBidApi).toHaveBeenCalledWith({
         gameId: 'game-1',
         playerId: 'p1',
         bid: 3,
         roundId: 'round-1',
       })
-      expect(mockContext.setState).toHaveBeenCalledWith({ loading: false })
+      expect(mockSetLoading).toHaveBeenCalledWith(false)
     })
 
     test('uses optional bid when provided', async () => {
@@ -352,8 +354,9 @@ describe('useGameActions Hook', () => {
           tricks: [],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -395,8 +398,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -431,8 +435,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -475,8 +480,9 @@ describe('useGameActions Hook', () => {
           tricks: [],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -509,8 +515,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -537,12 +544,16 @@ describe('useGameActions Hook', () => {
     })
 
     test('startGameHandler starts the game', async () => {
+      const mockPlayers = { p1: { playerId: 'p1', name: 'Player 1', present: true } }
       const { result } = renderHook(() =>
         useGameActions({
           gameId: 'game-1',
           playerId: 'p1',
           playerName: 'Player 1',
-          game: {},
+          game: {
+            settings: { numCards: 7 },
+            players: mockPlayers,
+          },
           players: {},
           hand: [],
           bid: 0,
@@ -551,8 +562,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -566,7 +578,11 @@ describe('useGameActions Hook', () => {
         await result.current.startGameHandler()
       })
 
-      expect(mockStartGame).toHaveBeenCalledWith({ gameId: 'game-1' })
+      expect(mockStartGame).toHaveBeenCalledWith({
+        gameId: 'game-1',
+        players: mockPlayers,
+        numCards: 7,
+      })
     })
 
     test('handleChange updates state from input', () => {
@@ -584,8 +600,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -608,7 +625,11 @@ describe('useGameActions Hook', () => {
       // Mock updateState to execute the updater function
       const mockUpdateStateWithExec = jest.fn((updater) => {
         if (typeof updater === 'function') {
-          updater({ game: {}, players: {}, bid: 3 })
+          updater({
+            game: { settings: { numCards: 7, dirty: true } },
+            players: {},
+            bid: 3,
+          })
         }
       })
 
@@ -617,7 +638,7 @@ describe('useGameActions Hook', () => {
           gameId: 'game-1',
           playerId: 'p1',
           playerName: 'Player 1',
-          game: {},
+          game: { settings: { numCards: 7, dirty: true } },
           players: {},
           hand: [],
           bid: 3,
@@ -626,8 +647,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateStateWithExec,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -662,8 +684,9 @@ describe('useGameActions Hook', () => {
           tricks: [],
           trickIndex: 0,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
         })
@@ -698,8 +721,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: mockCard,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,
@@ -732,8 +756,9 @@ describe('useGameActions Hook', () => {
           trickIndex: 0,
           trump: null,
           queuedCard: null,
-          visible: mockContext.visible,
-          setState: mockContext.setState,
+          visible: false,
+          setLoading: mockSetLoading,
+          setError: mockSetError,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
           autoPlayTimeoutRef: mockAutoPlayTimeout,

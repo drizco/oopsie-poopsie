@@ -10,7 +10,7 @@
 
 import { jest } from '@jest/globals'
 import admin from 'firebase-admin'
-import { newGame, addPlayer } from '../../functions/game.js'
+import { newGame, addPlayer } from '../../functions/game'
 
 // Only run these tests if FIREBASE_EMULATOR environment variable is set
 const describeIfEmulator = process.env.FIREBASE_EMULATOR ? describe : describe.skip
@@ -72,18 +72,20 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       const game = gameSnapshot.val()
 
       expect(game).toBeDefined()
-      expect(game.name).toBe('Integration Test Game')
-      expect(game.status).toBe('pending')
-      expect(game.numCards).toBe(10)
+      expect(game.metadata.name).toBe('Integration Test Game')
+      expect(game.state.status).toBe('pending')
+      expect(game.settings.numCards).toBe(10)
 
       // Verify player was created
-      const playerSnapshot = await db.ref(`players/${playerId}`).once('value')
+      const playerSnapshot = await db
+        .ref(`games/${gameId}/players/${playerId}`)
+        .once('value')
       const player = playerSnapshot.val()
 
       expect(player).toBeDefined()
       expect(player.name).toBe('Test Host')
       expect(player.host).toBe(true)
-      expect(player.gameId).toBe(gameId)
+      expect(player.playerId).toBe(playerId)
     })
   })
 
@@ -148,14 +150,10 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       await addPlayer(player3Req, player3Res)
 
       // Verify all players exist
-      const playersSnapshot = await db
-        .ref('players')
-        .orderByChild('gameId')
-        .equalTo(gameId)
-        .once('value')
+      const playersSnapshot = await db.ref(`games/${gameId}/players`).once('value')
 
       const players = playersSnapshot.val()
-      const playerArray = Object.values(players)
+      const playerArray = players ? Object.values(players) : []
 
       expect(playerArray).toHaveLength(3)
       expect(playerArray.map((p) => p.name).sort()).toEqual([
@@ -216,16 +214,13 @@ describeIfEmulator('Firebase Emulator Integration Tests', () => {
       const gameSnapshot = await db.ref(`games/${gameId}`).once('value')
       const game = gameSnapshot.val()
 
-      expect(game.status).toBe('pending')
+      expect(game.state.status).toBe('pending')
 
       // 4. Get all players
-      const playersSnapshot = await db
-        .ref('players')
-        .orderByChild('gameId')
-        .equalTo(gameId)
-        .once('value')
+      const playersSnapshot = await db.ref(`games/${gameId}/players`).once('value')
 
-      const players = Object.values(playersSnapshot.val())
+      const playersVal = playersSnapshot.val()
+      const players = playersVal ? Object.values(playersVal) : []
       expect(players).toHaveLength(2)
     })
   })

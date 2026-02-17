@@ -1,7 +1,7 @@
 // Test helpers for rendering React components
 import { jest } from '@jest/globals'
 import { render as rtlRender } from '@testing-library/react'
-import CombinedContext from '@/context/CombinedContext'
+import AppStateContext from '@/context/AppStateContext'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { TimerProvider } from '@/context/TimerContext'
 
@@ -10,22 +10,34 @@ import { TimerProvider } from '@/context/TimerContext'
  */
 export function render(ui, { contextValue = {}, ...renderOptions } = {}) {
   const defaultContextValue = {
-    mute: false,
-    setMute: jest.fn(),
-    dark: false,
-    setDark: jest.fn(),
+    // AppState context
     loading: false,
     setLoading: jest.fn(),
     error: null,
     setError: jest.fn(),
+    visible: true,
+    // Settings context
+    mute: false,
+    setMute: jest.fn(),
+    dark: false,
+    setDark: jest.fn(),
+    // Timer context
     timer: 60,
     setTimer: jest.fn(),
-    setState: jest.fn(),
   }
 
   const mergedContextValue = {
     ...defaultContextValue,
     ...contextValue,
+  }
+
+  // AppState context values
+  const appStateValue = {
+    loading: mergedContextValue.loading,
+    setLoading: mergedContextValue.setLoading,
+    error: mergedContextValue.error,
+    setError: mergedContextValue.setError,
+    visible: mergedContextValue.visible,
   }
 
   // Settings context values
@@ -44,11 +56,11 @@ export function render(ui, { contextValue = {}, ...renderOptions } = {}) {
 
   function Wrapper({ children }) {
     return (
-      <CombinedContext.Provider value={mergedContextValue}>
+      <AppStateContext.Provider value={appStateValue}>
         <SettingsProvider value={settingsValue}>
           <TimerProvider value={timerValue}>{children}</TimerProvider>
         </SettingsProvider>
-      </CombinedContext.Provider>
+      </AppStateContext.Provider>
     )
   }
 
@@ -60,17 +72,20 @@ export function render(ui, { contextValue = {}, ...renderOptions } = {}) {
  */
 export function createMockContext(overrides = {}) {
   return {
-    mute: false,
-    setMute: jest.fn(),
-    dark: false,
-    setDark: jest.fn(),
+    // AppState context
     loading: false,
     setLoading: jest.fn(),
     error: null,
     setError: jest.fn(),
+    visible: true,
+    // Settings context
+    mute: false,
+    setMute: jest.fn(),
+    dark: false,
+    setDark: jest.fn(),
+    // Timer context
     timer: 60,
     setTimer: jest.fn(),
-    setState: jest.fn(),
     ...overrides,
   }
 }

@@ -6,10 +6,10 @@ import {
   submitBid,
   replayGame,
   updatePlayer,
-} from '../../functions/game.js'
+} from '../../functions/game'
 
 // Mock the deck
-jest.mock('../../functions/deck.js')
+jest.mock('../../functions/deck')
 
 describe('Game Functions - newGame', () => {
   let mockRef

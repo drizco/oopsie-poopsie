@@ -50,7 +50,7 @@ beforeAll(async () => {
 describe('useGameListeners Hook', () => {
   let mockUpdateState
   let mockDispatchRound
-  let mockContext
+  let mockSetError
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -67,9 +67,7 @@ describe('useGameListeners Hook', () => {
       }
     })
     mockDispatchRound = jest.fn()
-    mockContext = {
-      setState: jest.fn(),
-    }
+    mockSetError = jest.fn()
 
     mockCalculateAdjustedBid.mockReturnValue(3)
     mockUseFirebaseListener.mockImplementation(() => ({}))
@@ -84,7 +82,7 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -108,7 +106,7 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -139,7 +137,7 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -161,7 +159,7 @@ describe('useGameListeners Hook', () => {
           roundId: null,
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -196,7 +194,7 @@ describe('useGameListeners Hook', () => {
           game: { status: 'play' },
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -237,7 +235,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -262,7 +260,7 @@ describe('useGameListeners Hook', () => {
           roundId: 'round-1',
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -283,7 +281,7 @@ describe('useGameListeners Hook', () => {
           roundId: 'round-1',
           updateState: mockUpdateState,
           dispatchRound: mockDispatchRound,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -335,7 +333,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -361,7 +359,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -398,7 +396,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -424,7 +422,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -459,7 +457,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -496,7 +494,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 3,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -524,7 +522,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 3,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -566,7 +564,7 @@ describe('useGameListeners Hook', () => {
             game: {},
             players: {},
             bid: 0,
-            context: mockContext,
+            setError: mockSetError,
           }),
         {
           initialProps: { roundId: 'round-1' },
@@ -606,7 +604,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
@@ -617,7 +615,7 @@ describe('useGameListeners Hook', () => {
       const testError = new Error('Firebase error')
       onError(testError)
 
-      expect(mockContext.setState).toHaveBeenCalledWith({ error: true })
+      expect(mockSetError).toHaveBeenCalledWith('Firebase error')
     })
   })
 
@@ -633,7 +631,7 @@ describe('useGameListeners Hook', () => {
           game: {},
           players: {},
           bid: 0,
-          context: mockContext,
+          setError: mockSetError,
         })
       )
 
