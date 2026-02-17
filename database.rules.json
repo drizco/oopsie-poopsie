@@ -1,0 +1,43 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      "$gameId": {
+        ".indexOn": ["metadata/timestamp"],
+        "metadata": {
+          ".read": "auth != null"
+        },
+        "settings": {
+          ".read": "auth != null"
+        },
+        "state": {
+          ".read": "auth != null"
+        },
+        "players": {
+          ".read": "auth != null",
+          "$playerId": {
+            ".read": "auth != null",
+            "hands": {
+              ".read": false,
+              "$roundId": {
+                ".read": "auth != null"
+              }
+            }
+          }
+        },
+        "rounds": {
+          "$roundId": {
+            ".read": "auth != null",
+            "bids": {
+              ".read": "auth != null"
+            },
+            "tricks": {
+              ".read": "auth != null"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@
 
 # testing
 /coverage
+/coverage-functions
 
 # next.js
 /.next/
@@ -14,6 +15,7 @@
 
 # production
 /build
+/.swc/
 
 # misc
 .DS_Store
@@ -34,3 +36,11 @@ serviceKey.json
 .now
 
 .env.build
+
+*.log
+
+/functions/node_modules
+/functions/emulator-data
+/functions/lib
+
+*.tsbuildinfo
