@@ -1,6 +1,7 @@
 import { BLUE, PINK } from './constants'
+import type { Card, Suit, Player, Trick } from '../types'
 
-export const getColor = (suit, dark) => {
+export const getColor = (suit: Suit, dark: boolean): string => {
   if (suit === 'C' || suit === 'S') {
     return dark ? BLUE : '#000'
   } else {
@@ -8,7 +9,7 @@ export const getColor = (suit, dark) => {
   }
 }
 
-export const getSource = (suit, dark) => {
+export const getSource = (suit: Suit, dark: boolean): string => {
   switch (suit) {
     case 'C':
       return `/images/club${dark ? '-dark' : ''}.png`
@@ -21,7 +22,13 @@ export const getSource = (suit, dark) => {
   }
 }
 
-export const isLegal = ({ hand, card, leadSuit }) => {
+interface IsLegalParams {
+  hand: Card[]
+  card: Card
+  leadSuit: Suit | null
+}
+
+export const isLegal = ({ hand, card, leadSuit }: IsLegalParams): boolean => {
   if (!leadSuit) return true
   const hasSuit = hand.some((c) => c.suit === leadSuit)
   if (hasSuit) {
@@ -30,7 +37,13 @@ export const isLegal = ({ hand, card, leadSuit }) => {
   return true
 }
 
-export const calculateLeader = ({ cards, trump, leadSuit }) =>
+interface CalculateLeaderParams {
+  cards: Card[]
+  trump: Suit
+  leadSuit: Suit
+}
+
+export const calculateLeader = ({ cards, trump, leadSuit }: CalculateLeaderParams): Card =>
   cards.sort((a, b) => {
     if (a.suit === trump && b.suit !== trump) {
       return -1
@@ -47,7 +60,7 @@ export const calculateLeader = ({ cards, trump, leadSuit }) =>
     return b.rank - a.rank
   })[0]
 
-export const getScore = (tricks) =>
+export const getScore = (tricks: Trick[]): Record<string, number> =>
   tricks.reduce((scoreObj, tr) => {
     const newScoreObj = { ...scoreObj }
     if (tr.winner) {
@@ -57,20 +70,44 @@ export const getScore = (tricks) =>
       newScoreObj[tr.winner] += 1
     }
     return newScoreObj
-  }, {})
+  }, {} as Record<string, number>)
 
-export const getNextPlayerIndex = ({ currentPlayerIndex, playerOrder }) => {
+interface PlayerIndexParams {
+  currentPlayerIndex: number
+  playerOrder: string[]
+}
+
+export const getNextPlayerIndex = ({ currentPlayerIndex, playerOrder }: PlayerIndexParams): number => {
   return (currentPlayerIndex + 1) % playerOrder.length
 }
 
-export const getNextPlayerId = ({ currentPlayerIndex, playerOrder }) => {
+export const getNextPlayerId = ({ currentPlayerIndex, playerOrder }: PlayerIndexParams): string => {
   const nextIndex = getNextPlayerIndex({ currentPlayerIndex, playerOrder })
   return playerOrder[nextIndex]
 }
 
-export const getWinner = ({ winner, players }) => players[winner].name
+interface GetWinnerParams {
+  winner: string
+  players: Record<string, Player>
+}
 
-export const calculateGameScore = ({ players, bids, roundScore, score, noBidPoints }) => {
+export const getWinner = ({ winner, players }: GetWinnerParams): string => players[winner].name
+
+interface CalculateGameScoreParams {
+  players: Record<string, Player>
+  bids: Record<string, number>
+  roundScore: Record<string, number>
+  score: Record<string, number>
+  noBidPoints: boolean
+}
+
+export const calculateGameScore = ({
+  players,
+  bids,
+  roundScore,
+  score,
+  noBidPoints,
+}: CalculateGameScoreParams): Record<string, number> => {
   const newGameScore = { ...score }
   Object.values(players).forEach((player) => {
     const bidsMade = bids[player.playerId]
@@ -91,10 +128,22 @@ export const calculateGameScore = ({ players, bids, roundScore, score, noBidPoin
   return newGameScore
 }
 
-export const getAvailableTricks = ({ numCards, bids }) =>
+interface AvailableTricksParams {
+  numCards: number
+  bids: Record<string, number> | null
+}
+
+export const getAvailableTricks = ({ numCards, bids }: AvailableTricksParams): number =>
   numCards - Object.values(bids || {}).reduce((num, bid) => num + bid, 0)
 
-export const handleDirtyGame = ({ value, numCards, bids, players }) => {
+interface HandleDirtyGameParams {
+  value: number
+  numCards: number
+  bids: Record<string, number> | null
+  players: Record<string, Player> | null
+}
+
+export const handleDirtyGame = ({ value, numCards, bids, players }: HandleDirtyGameParams): boolean => {
   const lastPlayer =
     Object.keys(bids || {}).length + 1 === Object.keys(players || {}).length
   if (lastPlayer) {

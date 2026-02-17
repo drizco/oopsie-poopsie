@@ -1,18 +1,23 @@
 import { handleDirtyGame } from './helpers'
+import type { Player } from '../types'
+
+interface GameBidInfo {
+  numCards: number
+  dirty: boolean
+}
 
 /**
  * Calculate the adjusted bid value based on dirty game rules.
  * In dirty games, the total bids cannot equal the number of cards.
  * This function auto-corrects the bid if needed.
- *
- * @param {number} currentBid - The current bid value
- * @param {Object} bids - All player bids
- * @param {Object} game - Game object with numCards and dirty properties
- * @param {Object} players - All players in the game
- * @param {boolean} increment - Whether to increment (true) or decrement (false) when adjusting
- * @returns {number} The adjusted bid value
  */
-export function calculateAdjustedBid(currentBid, bids, game, players, increment = true) {
+export function calculateAdjustedBid(
+  currentBid: number,
+  bids: Record<string, number>,
+  game: GameBidInfo | null | undefined,
+  players: Record<string, Player>,
+  increment: boolean = true
+): number {
   if (!game) return currentBid
 
   const { numCards, dirty } = game
