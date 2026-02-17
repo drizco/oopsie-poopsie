@@ -1,14 +1,14 @@
 import React, { useContext } from 'react'
 import { Modal, ModalBody } from 'reactstrap'
-import CombinedContext from '../context/CombinedContext'
+import AppStateContext from '../context/AppStateContext'
 
 const ErrorModal = () => {
-  const { error, setState } = useContext(CombinedContext)
+  const { error, setError } = useContext(AppStateContext)
   return (
     <Modal
-      isOpen={error}
+      isOpen={!!error}
       toggle={() => {
-        setState({ error: !error })
+        setError(null)
       }}
     >
       <ModalBody>

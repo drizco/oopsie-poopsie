@@ -4,9 +4,18 @@ import styles from '../styles/components/card-row.module.scss'
 import { getSource, getColor, isLegal } from '../utils/helpers'
 import SettingsContext from '../context/SettingsContext'
 import classNames from 'classnames'
-const CardRow = ({ cards, playCard, queuedCard, leadSuit }) => {
+import type { Card, Suit } from '../types'
+
+interface CardRowProps {
+  cards: Card[]
+  playCard: (card: Card) => void
+  queuedCard: Card | null
+  leadSuit: Suit | null
+}
+
+const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
   const { dark } = useContext(SettingsContext)
-  const [illegalCard, setIllegalCard] = useState(null)
+  const [illegalCard, setIllegalCard] = useState<string | null>(null)
   useEffect(() => {
     const timer = setTimeout(() => {
       setIllegalCard(null)
@@ -32,7 +41,7 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }) => {
                 e.preventDefault()
                 const legal = isLegal({ hand: cards, card, leadSuit })
                 if (!legal) {
-                  setIllegalCard(card.cardId)
+                  setIllegalCard(card.cardId || null)
                 }
                 playCard(card)
               }}

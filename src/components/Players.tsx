@@ -15,6 +15,25 @@ import SettingsContext from '../context/SettingsContext'
 import TimerContext from '../context/TimerContext'
 import styles from '../styles/components/players.module.scss'
 import { getColor, getSource } from '../utils/helpers'
+import type { Player, Trick, GameStatus } from '../types'
+
+interface PlayersProps {
+  players: Record<string, Player>
+  currentPlayer: string
+  bids: Record<string, number> | null
+  roundScore: Record<string, number>
+  trick: Trick | null
+  bid: number
+  handleToggle: (inc: boolean, value?: string) => void
+  submitBid: () => Promise<void>
+  afterBid: () => void
+  dealer: string
+  thisPlayer: string
+  score: Record<string, number> | null
+  timeLimit: number | null
+  winnerModalShowing: boolean
+  status: GameStatus | null
+}
 
 const Players = ({
   players,
@@ -32,7 +51,7 @@ const Players = ({
   timeLimit,
   winnerModalShowing,
   status,
-}) => {
+}: PlayersProps) => {
   const { dark } = useContext(SettingsContext)
   const { timer } = useContext(TimerContext)
   let newPlayers = []
@@ -44,7 +63,7 @@ const Players = ({
       const player = players[nextPlayer]
       if (player) {
         newPlayers.push(player)
-        nextPlayer = player.nextPlayer
+        nextPlayer = player.nextPlayer || thisPlayer
       }
     }
   } else {
@@ -61,7 +80,7 @@ const Players = ({
           if (!status || status === 'pending') {
             playerScore = ''
           }
-          const timerShowMax = timeLimit > 10 ? 10 : 5
+          const timerShowMax = timeLimit && timeLimit > 10 ? 10 : 5
 
           return (
             <li key={playerId}>
@@ -74,7 +93,8 @@ const Players = ({
               >
                 <Col xs="4" className="d-flex align-items-center">
                   <div className="player-score" data-player-score={playerScore}>
-                    {thisPlayer !== currentPlayer &&
+                    {timeLimit &&
+                      thisPlayer !== currentPlayer &&
                       currentPlayer === playerId &&
                       timer >= 0 &&
                       timer <= timerShowMax && (
@@ -145,7 +165,7 @@ const Players = ({
                               <h2
                                 className="mb-2"
                                 key={playerId}
-                              >{`${name}: ${bids[playerId]}`}</h2>
+                              >{`${name}: ${bids?.[playerId]}`}</h2>
                             ))}
                       </div>
                     </Row>
@@ -155,7 +175,9 @@ const Players = ({
                           <Button
                             className={styles.toggle_button}
                             color="danger"
-                            onClick={(e) => handleToggle(false, e.target.value)}
+                            onClick={(e) =>
+                              handleToggle(false, (e.target as HTMLButtonElement).value)
+                            }
                           >
                             -
                           </Button>
@@ -171,7 +193,9 @@ const Players = ({
                           <Button
                             className={styles.toggle_button}
                             color="success"
-                            onClick={(e) => handleToggle(true, e.target.value)}
+                            onClick={(e) =>
+                              handleToggle(true, (e.target as HTMLButtonElement).value)
+                            }
                           >
                             +
                           </Button>

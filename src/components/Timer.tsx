@@ -2,7 +2,14 @@ import { useContext, useEffect } from 'react'
 import TimerContext from '../context/TimerContext'
 import useInterval from '../hooks/useInterval'
 
-const Timer = ({ timeLimit, playerId, currentPlayer, randomPlay }) => {
+interface TimerProps {
+  timeLimit: number
+  playerId: string
+  currentPlayer: string
+  randomPlay: () => Promise<void> | void
+}
+
+const Timer = ({ timeLimit, playerId, currentPlayer, randomPlay }: TimerProps) => {
   const { setTimer, timer } = useContext(TimerContext)
 
   useInterval(() => {

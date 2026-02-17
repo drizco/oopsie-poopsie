@@ -1,15 +1,16 @@
 import { Form, FormGroup, Label, Input, Button, Row, Col } from 'reactstrap'
+import type { ChangeEvent } from 'react'
+
+interface JoinGameFormProps {
+  playerName: string
+  onPlayerNameChange: (e: ChangeEvent<HTMLInputElement>) => void
+  onJoin: () => void
+}
 
 /**
  * JoinGameForm - Player name input and join button
- *
- * @param {Object} props
- * @param {string} props.playerName - Current player name value
- * @param {Function} props.onPlayerNameChange - Handler for name input changes
- * @param {Function} props.onJoin - Handler for join button click
- * @returns {JSX.Element}
  */
-const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }) => {
+const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }: JoinGameFormProps) => {
   return (
     <Col xs="4" className="mb-5">
       <Row>

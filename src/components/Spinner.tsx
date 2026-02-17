@@ -3,7 +3,11 @@ import { useContext } from 'react'
 import SettingsContext from '../context/SettingsContext'
 import { PINK, RED } from '../utils/constants'
 
-const SpinnerComponent = ({ loading }) => {
+interface SpinnerComponentProps {
+  loading: boolean
+}
+
+const SpinnerComponent = ({ loading }: SpinnerComponentProps) => {
   const { dark } = useContext(SettingsContext)
   return loading ? (
     <div

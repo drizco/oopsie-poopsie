@@ -1,9 +1,13 @@
 import React from 'react'
+import type { ReactNode } from 'react'
 import Header from './Header'
 // import InviteModal from "./InviteModal";
 
-const Layout = (props) => {
-  const { children } = props
+interface LayoutProps {
+  children: ReactNode
+}
+
+const Layout = ({ children }: LayoutProps) => {
 
   return (
     <>
