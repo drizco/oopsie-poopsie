@@ -2,8 +2,21 @@ import ShortUniqueId from 'short-unique-id'
 import type { Request, Response } from 'express'
 import type { database } from 'firebase-admin'
 import Deck from './deck.js'
-import { calculateLeader, isLegal } from './helpers.js'
+import { calculateLeader, isLegal, calculateScore, getNextPlayerIndex } from './helpers.js'
 import type { Card, Player } from './types.js'
+import {
+  dealHandsToPlayers,
+  writeHandsToDatabase,
+  createRoundAndTrick,
+  rebuildPlayerOrder,
+} from './gameHelpers.js'
+import {
+  sendError,
+  sendSuccess,
+  validatePlayerTurn,
+  handleFunctionError,
+  getFirebaseValue,
+} from './databaseHelpers.js'
 
 const uid = new ShortUniqueId({ length: 4 })
 
@@ -46,10 +59,9 @@ export const newGame = async (req: RequestWithRef, res: Response): Promise<Respo
     updateObj[`games/${gameId}/players/${playerId}/playerId`] = playerId
     updateObj[`games/${gameId}/players/${playerId}/present`] = true
     await ref().update(updateObj)
-    return res.status(200).send({ playerId, gameId })
+    return sendSuccess(res, { playerId, gameId })
   } catch (error) {
-    console.log(`$$>>>>: exports.newGame -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'newGame', error)
   }
 }
 
@@ -61,10 +73,9 @@ export const replayGame = async (
     const { ref, body } = req
     const { oldGameId, newGameId } = body
     await ref(`games/${oldGameId}/state`).update({ nextGame: newGameId })
-    return res.sendStatus(200)
+    return sendSuccess(res)
   } catch (error) {
-    console.log(`$$>>>>: export const replayGame -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'replayGame', error)
   }
 }
 
@@ -78,12 +89,8 @@ export const startGame = async (
       body: { gameId },
     } = req
     let [players, numCards] = await Promise.all([
-      ref(`games/${gameId}/players`)
-        .once('value')
-        .then((snap) => snap.val()),
-      ref(`games/${gameId}/settings/numCards`)
-        .once('value')
-        .then((snap) => snap.val()),
+      getFirebaseValue(ref, `games/${gameId}/players`),
+      getFirebaseValue(ref, `games/${gameId}/settings/numCards`),
     ])
     players = Object.values(players) as Player[]
     const deckSize = 52
@@ -94,31 +101,15 @@ export const startGame = async (
     }
     const deck = new Deck()
 
-    const hands: Record<string, Card[]> = {}
-    for (let i = numCards; i > 0; i--) {
-      players.forEach((player: Player) => {
-        const card = deck.deal()
-        if (card) {
-          if (hands[player.playerId]) {
-            hands[player.playerId].push(card)
-          } else {
-            hands[player.playerId] = [card]
-          }
-        }
-      })
-    }
+    const hands = dealHandsToPlayers(deck, players, numCards)
 
     const trumpCard = deck.deal()
     if (!trumpCard) {
-      return res.status(500).json({ error: 'Failed to draw trump card' })
+      return sendError(res, 500, 'Failed to draw trump card')
     }
     const trump = trumpCard.suit
 
-    const roundRef = ref(`games/${gameId}/rounds`).push()
-    const roundKey = roundRef.key as string
-
-    const trickRef = ref(`games/${gameId}/rounds/${roundKey}/tricks`).push()
-    const trickKey = trickRef.key as string
+    const { roundKey, trickKey } = createRoundAndTrick(ref, gameId)
 
     const randomIndex = Math.floor(Math.random() * numPlayers)
     const dealerIndex = randomIndex
@@ -135,7 +126,10 @@ export const startGame = async (
     updateObj[`games/${gameId}/state/roundNum`] = 1
     updateObj[`games/${gameId}/state/numRounds`] = numCards * 2 - 1
     updateObj[`games/${gameId}/state/dealerIndex`] = dealerIndex
-    updateObj[`games/${gameId}/state/currentPlayerIndex`] = (dealerIndex + 1) % numPlayers
+    updateObj[`games/${gameId}/state/currentPlayerIndex`] = getNextPlayerIndex(
+      dealerIndex,
+      numPlayers
+    )
     updateObj[`games/${gameId}/state/playerOrder`] = playerOrder
     updateObj[`games/${gameId}/state/status`] = 'bid'
 
@@ -147,28 +141,12 @@ export const startGame = async (
     updateObj[`games/${gameId}/rounds/${roundKey}/tricks/${trickKey}/trickId`] = trickKey
 
     // Deal hands
-    Object.keys(hands).forEach((playerId) => {
-      const hand = hands[playerId]
-      const sortedHand = deck.sortHand(hand)
-      sortedHand.forEach((card) => {
-        const cardRef = ref(
-          `games/${gameId}/players/${playerId}/hands/${roundKey}/cards`
-        ).push()
-        const cardId = cardRef.key as string
-        updateObj[
-          `games/${gameId}/players/${playerId}/hands/${roundKey}/cards/${cardId}`
-        ] = Object.assign({}, card, {
-          cardId,
-          playerId,
-        })
-      })
-    })
+    writeHandsToDatabase(updateObj, ref, gameId, roundKey, hands, deck)
 
     await ref().update(updateObj)
-    return res.sendStatus(200)
+    return sendSuccess(res)
   } catch (error) {
-    console.error(`$$>>>>: startGame -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'startGame', error)
   }
 }
 
@@ -182,27 +160,24 @@ export const submitBid = async (
     const updateObj: Record<string, unknown> = {}
 
     const [playerOrder, currentPlayerIndex, currentBids] = await Promise.all([
-      ref(`games/${gameId}/state/playerOrder`)
-        .once('value')
-        .then((snap) => snap.val()),
-      ref(`games/${gameId}/state/currentPlayerIndex`)
-        .once('value')
-        .then((snap) => snap.val()),
-      ref(`games/${gameId}/rounds/${roundId}/bids`)
-        .once('value')
-        .then((snap) => snap.val() || {}),
+      getFirebaseValue(ref, `games/${gameId}/state/playerOrder`),
+      getFirebaseValue(ref, `games/${gameId}/state/currentPlayerIndex`),
+      getFirebaseValue(ref, `games/${gameId}/rounds/${roundId}/bids`).then(
+        (val) => val || {}
+      ),
     ])
 
-    const currentPlayerId = playerOrder[currentPlayerIndex]
-    if (currentPlayerId !== playerId) {
-      return res.status(400).json({ error: 'Not your turn' })
+    try {
+      validatePlayerTurn(playerOrder, currentPlayerIndex, playerId)
+    } catch (error) {
+      return sendError(res, 400, 'Not your turn')
     }
 
     if (currentBids[playerId] !== undefined) {
-      return res.status(400).json({ error: 'Already submitted bid' })
+      return sendError(res, 400, 'Already submitted bid')
     }
 
-    const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length
+    const nextPlayerIndex = getNextPlayerIndex(currentPlayerIndex, playerOrder.length)
     const numPlayers = playerOrder.length
 
     const allBidsIn = Object.keys(currentBids).length === numPlayers - 1
@@ -213,10 +188,9 @@ export const submitBid = async (
       updateObj[`games/${gameId}/state/status`] = 'play'
     }
     await ref().update(updateObj)
-    return res.sendStatus(200)
+    return sendSuccess(res)
   } catch (error) {
-    console.error(`$$>>>>: submitBid -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'submitBid', error)
   }
 }
 
@@ -227,37 +201,31 @@ export const playCard = async (req: RequestWithRef, res: Response): Promise<Resp
 
     const [playerOrder, currentPlayerIndex, gameState, trump, currentTrick, playerHand] =
       await Promise.all([
-        ref(`games/${gameId}/state/playerOrder`)
-          .once('value')
-          .then((snap) => snap.val()),
-        ref(`games/${gameId}/state/currentPlayerIndex`)
-          .once('value')
-          .then((snap) => snap.val()),
-        ref(`games/${gameId}/state`)
-          .once('value')
-          .then((snap) => snap.val()),
-        ref(`games/${gameId}/rounds/${roundId}/trump`)
-          .once('value')
-          .then((snap) => snap.val()),
-        ref(`games/${gameId}/rounds/${roundId}/tricks/${trickId}`)
-          .once('value')
-          .then((snap) => snap.val() || {}),
-        ref(`games/${gameId}/players/${playerId}/hands/${roundId}/cards`)
-          .once('value')
-          .then((snap) => {
-            const cards = snap.val() || {}
-            return Object.values(cards) as Card[]
-          }),
+        getFirebaseValue(ref, `games/${gameId}/state/playerOrder`),
+        getFirebaseValue(ref, `games/${gameId}/state/currentPlayerIndex`),
+        getFirebaseValue(ref, `games/${gameId}/state`),
+        getFirebaseValue(ref, `games/${gameId}/rounds/${roundId}/trump`),
+        getFirebaseValue(ref, `games/${gameId}/rounds/${roundId}/tricks/${trickId}`).then(
+          (val) => val || {}
+        ),
+        getFirebaseValue(
+          ref,
+          `games/${gameId}/players/${playerId}/hands/${roundId}/cards`
+        ).then((cards) => {
+          cards = cards || {}
+          return Object.values(cards) as Card[]
+        }),
       ])
 
-    const currentPlayerId = playerOrder[currentPlayerIndex]
-    if (currentPlayerId !== playerId) {
-      return res.status(400).json({ error: 'Not your turn' })
+    try {
+      validatePlayerTurn(playerOrder, currentPlayerIndex, playerId)
+    } catch (error) {
+      return sendError(res, 400, 'Not your turn')
     }
 
     const cardInHand = playerHand.find((c: Card) => c.cardId === card.cardId)
     if (!cardInHand) {
-      return res.status(400).json({ error: 'Card not in hand' })
+      return sendError(res, 400, 'Card not in hand')
     }
 
     const trickCards = Object.values(currentTrick.cards ?? {}) as Card[]
@@ -267,7 +235,7 @@ export const playCard = async (req: RequestWithRef, res: Response): Promise<Resp
     }
 
     if (!isLegal({ hand: playerHand, card, leadSuit })) {
-      return res.status(400).json({ error: 'Illegal card play' })
+      return sendError(res, 400, 'Illegal card play')
     }
 
     const allCards = [...trickCards, card]
@@ -281,7 +249,7 @@ export const playCard = async (req: RequestWithRef, res: Response): Promise<Resp
     })
     const leader = winningCard ? winningCard.playerId : null
 
-    const nextPlayerIndex = (currentPlayerIndex + 1) % playerOrder.length
+    const nextPlayerIndex = getNextPlayerIndex(currentPlayerIndex, playerOrder.length)
 
     const updateObj: Record<string, unknown> = {}
     if (leadSuit && !currentTrick.leadSuit) {
@@ -314,10 +282,9 @@ export const playCard = async (req: RequestWithRef, res: Response): Promise<Resp
       await advanceToNextRound(ref, gameId)
     }
 
-    return res.sendStatus(200)
+    return sendSuccess(res)
   } catch (error) {
-    console.error(`$$>>>>: playCard -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'playCard', error)
   }
 }
 
@@ -328,12 +295,8 @@ const advanceToNextRound = async (
   const updateObj: Record<string, unknown> = {}
   const promiseArray: Promise<unknown>[] = []
 
-  const gameState = await ref(`games/${gameId}/state`)
-    .once('value')
-    .then((snap) => snap.val())
-  const gameSettings = await ref(`games/${gameId}/settings`)
-    .once('value')
-    .then((snap) => snap.val())
+  const gameState = await getFirebaseValue(ref, `games/${gameId}/state`)
+  const gameSettings = await getFirebaseValue(ref, `games/${gameId}/settings`)
 
   const {
     numCards: currentNumCards,
@@ -376,13 +339,8 @@ const advanceToNextRound = async (
   })
 
   Object.keys(scoreObj).forEach((playerId) => {
-    let score = 0
-    if (scoreObj[playerId].bid === scoreObj[playerId].won) {
-      score += 10
-      score += scoreObj[playerId].won
-    } else if (!noBidPoints) {
-      score += scoreObj[playerId].won
-    }
+    const { bid, won } = scoreObj[playerId]
+    const score = calculateScore(bid, won, noBidPoints)
     promiseArray.push(
       ref(`games/${gameId}/players/${playerId}/score`).transaction(
         (oldScore) => (oldScore || 0) + score
@@ -395,30 +353,11 @@ const advanceToNextRound = async (
   } else {
     const deck = new Deck()
 
-    const playersSnap = await ref(`games/${gameId}/players`).once('value')
-    const playersObj = playersSnap.val()
+    const playersObj = await getFirebaseValue(ref, `games/${gameId}/players`)
     const players = Object.values(playersObj) as Player[]
 
     // Rebuild playerOrder to include late-joining players and filter out absent players
-    const presentPlayers = players
-      .filter((p) => p.present !== false) // Include if present is true or undefined
-      .sort((a, b) => {
-        // Preserve relative order from old playerOrder
-        const aIndex = playerOrder.indexOf(a.playerId)
-        const bIndex = playerOrder.indexOf(b.playerId)
-
-        if (aIndex !== -1 && bIndex !== -1) {
-          return aIndex - bIndex // Both were in old order, preserve positions
-        } else if (aIndex !== -1) {
-          return -1 // a was in old order, comes first
-        } else if (bIndex !== -1) {
-          return 1 // b was in old order, comes first
-        } else {
-          return a.playerId.localeCompare(b.playerId) // Both new, stable sort
-        }
-      })
-
-    const updatedPlayerOrder = presentPlayers.map((p) => p.playerId)
+    const updatedPlayerOrder = rebuildPlayerOrder(playerOrder, players)
     const numPlayers = updatedPlayerOrder.length
 
     // Validate minimum player count
@@ -426,32 +365,18 @@ const advanceToNextRound = async (
       throw new Error('Not enough players to continue the game')
     }
 
-    const hands: Record<string, Card[]> = {}
-    for (let i = numCards; i > 0; i--) {
-      presentPlayers.forEach((player) => {
-        const card = deck.deal()
-        if (card) {
-          if (hands[player.playerId]) {
-            hands[player.playerId].push(card)
-          } else {
-            hands[player.playerId] = [card]
-          }
-        }
-      })
-    }
-    const newDealerIndex = (currentDealerIndex + 1) % numPlayers
-    const newCurrentPlayerIndex = (newDealerIndex + 1) % numPlayers
+    const presentPlayers = players.filter((p) => p.present !== false)
+
+    const hands = dealHandsToPlayers(deck, presentPlayers, numCards)
+    const newDealerIndex = getNextPlayerIndex(currentDealerIndex, numPlayers)
+    const newCurrentPlayerIndex = getNextPlayerIndex(newDealerIndex, numPlayers)
 
     const trumpCard = deck.deal()
     if (!trumpCard) {
       throw new Error('Failed to draw trump card')
     }
     const trump = trumpCard.suit
-    const roundRef = ref(`games/${gameId}/rounds`).push()
-    const roundKey = roundRef.key as string
-
-    const trickRef = ref(`games/${gameId}/rounds/${roundKey}/tricks`).push()
-    const trickKey = trickRef.key as string
+    const { roundKey, trickKey } = createRoundAndTrick(ref, gameId)
 
     updateObj[`games/${gameId}/state/roundId`] = roundKey
     updateObj[`games/${gameId}/state/roundNum`] = roundNum
@@ -468,22 +393,7 @@ const advanceToNextRound = async (
     updateObj[`games/${gameId}/rounds/${roundKey}/trump`] = trump
     updateObj[`games/${gameId}/rounds/${roundKey}/tricks/${trickKey}/trickId`] = trickKey
 
-    Object.keys(hands).forEach((playerId) => {
-      const hand = hands[playerId]
-      const sortedHand = deck.sortHand(hand)
-      sortedHand.forEach((card) => {
-        const cardRef = ref(
-          `games/${gameId}/players/${playerId}/hands/${roundKey}/cards`
-        ).push()
-        const cardId = cardRef.key as string
-        updateObj[
-          `games/${gameId}/players/${playerId}/hands/${roundKey}/cards/${cardId}`
-        ] = Object.assign({}, card, {
-          cardId,
-          playerId,
-        })
-      })
-    })
+    writeHandsToDatabase(updateObj, ref, gameId, roundKey, hands, deck)
   }
 
   promiseArray.push(ref().update(updateObj))
@@ -499,16 +409,14 @@ export const addPlayer = async (
     const { playerName, gameId } = body
 
     // Validate game exists and is joinable
-    const gameState = await ref(`games/${gameId}/state`)
-      .once('value')
-      .then((snap) => snap.val())
+    const gameState = await getFirebaseValue(ref, `games/${gameId}/state`)
 
     if (!gameState) {
-      return res.status(404).json({ error: 'Game not found' })
+      return sendError(res, 404, 'Game not found')
     }
 
     if (gameState.status === 'over') {
-      return res.status(400).json({ error: 'Game has ended' })
+      return sendError(res, 400, 'Game has ended')
     }
 
     const playerRef = ref(`games/${gameId}/players`).push()
@@ -518,10 +426,9 @@ export const addPlayer = async (
       playerId,
       present: true,
     })
-    return res.status(200).send({ playerId })
+    return sendSuccess(res, { playerId })
   } catch (error) {
-    console.log(`$$>>>>: export const addPlayer -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'addPlayer', error)
   }
 }
 
@@ -535,9 +442,8 @@ export const updatePlayer = async (
     await ref(`games/${gameId}/players/${playerId}`).update({
       present: present === 'true',
     })
-    return res.sendStatus(200)
+    return sendSuccess(res)
   } catch (error) {
-    console.log(`$$>>>>: export const updatePlayer -> error`, error)
-    return res.sendStatus(500)
+    return handleFunctionError(res, 'updatePlayer', error)
   }
 }

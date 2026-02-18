@@ -401,9 +401,29 @@ describe('Game Functions - submitBid', () => {
   })
 
   test('should handle errors', async () => {
-    mockRef.mockImplementation(() => ({
-      update: jest.fn(() => Promise.reject(new Error('Database error'))),
-    }))
+    mockRef.mockImplementation((path) => {
+      if (path === 'games/TEST/state/playerOrder') {
+        return {
+          once: jest.fn(() =>
+            Promise.resolve({ val: () => ['player-1', 'player-2', 'player-3'] })
+          ),
+        }
+      }
+      if (path === 'games/TEST/state/currentPlayerIndex') {
+        return {
+          once: jest.fn(() => Promise.resolve({ val: () => 0 })),
+        }
+      }
+      if (path === 'games/TEST/rounds/round-1/bids') {
+        return {
+          once: jest.fn(() => Promise.resolve({ val: () => ({}) })),
+        }
+      }
+      return {
+        update: jest.fn(() => Promise.reject(new Error('Database error'))),
+        once: jest.fn(() => Promise.resolve({ val: () => ({}) })),
+      }
+    })
 
     await submitBid(mockReq, mockRes)
 
