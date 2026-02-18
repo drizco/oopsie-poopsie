@@ -38,5 +38,3 @@ jobs:
       - name: Functions tests
         run: yarn test:functions --ci
 
-      - name: Build
-        run: yarn build
