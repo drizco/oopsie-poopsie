@@ -1,21 +1,4 @@
-/**
- * Server-side game logic helpers
- * Copied from src/utils/helpers.ts to ensure consistent game logic
- */
-
 import type { Suit, Card } from './types.js'
-
-interface CalculateLeaderParams {
-  cards: Card[]
-  trump: Suit
-  leadSuit: Suit
-}
-
-interface IsLegalParams {
-  hand: Card[]
-  card: Card
-  leadSuit: Suit | null
-}
 
 /**
  * Determines which card is winning the trick
@@ -24,7 +7,11 @@ export const calculateLeader = ({
   cards,
   trump,
   leadSuit,
-}: CalculateLeaderParams): Card =>
+}: {
+  cards: Card[]
+  trump: Suit
+  leadSuit: Suit
+}): Card =>
   cards.sort((a, b) => {
     // Trump beats non-trump
     if (a.suit === trump && b.suit !== trump) {
@@ -47,11 +34,47 @@ export const calculateLeader = ({
 /**
  * Checks if a card is legal to play given the current hand and lead suit
  */
-export const isLegal = ({ hand, card, leadSuit }: IsLegalParams): boolean => {
+export const isLegal = ({
+  hand,
+  card,
+  leadSuit,
+}: {
+  hand: Card[]
+  card: Card
+  leadSuit: Suit | null
+}): boolean => {
   if (!leadSuit) return true
   const hasSuit = hand.some((c) => c.suit === leadSuit)
   if (hasSuit) {
     return card.suit === leadSuit
   }
   return true
+}
+
+/**
+ * Calculates the score for a single player for a round
+ */
+export const calculateScore = (
+  bid: number,
+  won: number,
+  noBidPoints: boolean
+): number => {
+  let score = 0
+  if (bid === won) {
+    score += 10
+    score += won
+  } else if (!noBidPoints) {
+    score += won
+  }
+  return score
+}
+
+/**
+ * Gets the next player index in the rotation
+ */
+export const getNextPlayerIndex = (
+  currentPlayerIndex: number,
+  numPlayers: number
+): number => {
+  return (currentPlayerIndex + 1) % numPlayers
 }
