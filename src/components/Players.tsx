@@ -14,7 +14,7 @@ import {
 import SettingsContext from '../context/SettingsContext'
 import TimerContext from '../context/TimerContext'
 import styles from '../styles/components/players.module.scss'
-import { getColor, getSource } from '../utils/helpers'
+import { getColor, getSuitSymbol } from '../utils/helpers'
 import type { Player, Trick, GameStatus } from '../types'
 
 interface PlayersProps {
@@ -119,7 +119,7 @@ const Players = ({
                 {trick && trick.cards && trick.cards[playerId] && (
                   <Col xs="5" sm="4">
                     <div className={styles.card}>
-                      <img src={getSource(trick.cards[playerId].suit, dark)} />
+                      <span style={{ color: getColor(trick.cards[playerId].suit, dark) }}>{getSuitSymbol(trick.cards[playerId].suit)}</span>
                       <h2
                         style={{
                           color: getColor(trick.cards[playerId].suit, dark),

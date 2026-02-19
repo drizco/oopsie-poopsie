@@ -9,16 +9,16 @@ export const getColor = (suit: Suit, dark: boolean): string => {
   }
 }
 
-export const getSource = (suit: Suit, dark: boolean): string => {
+export const getSuitSymbol = (suit: Suit): string => {
   switch (suit) {
     case 'C':
-      return `/images/club${dark ? '-dark' : ''}.png`
+      return '♣'
     case 'H':
-      return `/images/heart${dark ? '-dark' : ''}.png`
+      return '♥'
     case 'S':
-      return `/images/spade${dark ? '-dark' : ''}.png`
+      return '♠'
     case 'D':
-      return `/images/diamond${dark ? '-dark' : ''}.png`
+      return '♦'
   }
 }
 

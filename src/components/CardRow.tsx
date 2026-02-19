@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react'
 
 import styles from '../styles/components/card-row.module.scss'
-import { getSource, getColor, isLegal } from '../utils/helpers'
+import { getSuitSymbol, getColor, isLegal } from '../utils/helpers'
 import SettingsContext from '../context/SettingsContext'
 import classNames from 'classnames'
 import type { Card, Suit } from '../types'
@@ -48,7 +48,7 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
               }}
             >
               <div>
-                <img src={getSource(card.suit, dark)} />
+                <span style={{ color: getColor(card.suit, dark) }}>{getSuitSymbol(card.suit)}</span>
                 <h2 style={{ color: getColor(card.suit, dark) }}>{card.value}</h2>
               </div>
             </li>
@@ -63,9 +63,8 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
             max-height: 36vw;
           }
 
-          li > div > img {
-            width: ${cardWidth * 0.3}vw;
-            max-width: ${24 * 0.3}vw;
+          li > div > span {
+            font-size: min(${cardWidth * 0.3}vw, ${24 * 0.3}vw);
           }
           li > div > h2 {
             font-size: min(${cardWidth * 0.35}vw, 10vw);
