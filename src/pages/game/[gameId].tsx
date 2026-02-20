@@ -8,7 +8,7 @@ import SettingsContext from '../../context/SettingsContext'
 import TimerContext from '../../context/TimerContext'
 import styles from '../../styles/pages/game.module.scss'
 import CardRow from '../../components/CardRow'
-import { getSource, getAvailableTricks, getWinner } from '../../utils/helpers'
+import { getSuitSymbol, getColor, getAvailableTricks, getWinner } from '../../utils/helpers'
 import Players from '../../components/Players'
 import NotificationController from '../../components/NotificationController'
 import CustomTrump from '../../components/CustomTrump'
@@ -198,7 +198,7 @@ function Game({ gameId, isMobile }: GameProps) {
             {leadSuit && (
               <>
                 <h3>LEAD</h3>
-                <img src={getSource(leadSuit, dark)} />
+                <span style={{ color: getColor(leadSuit, dark) }}>{getSuitSymbol(leadSuit)}</span>
               </>
             )}
           </Col>
@@ -206,7 +206,7 @@ function Game({ gameId, isMobile }: GameProps) {
             {trump && (
               <>
                 <CustomTrump />
-                <img src={getSource(trump, dark)} />
+                <span style={{ color: getColor(trump, dark) }}>{getSuitSymbol(trump)}</span>
               </>
             )}
           </Col>

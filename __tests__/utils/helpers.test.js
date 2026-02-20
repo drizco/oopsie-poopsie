@@ -9,7 +9,7 @@ import {
   getAvailableTricks,
   handleDirtyGame,
   getColor,
-  getSource,
+  getSuitSymbol,
 } from '@/utils/helpers'
 
 describe('Utility Helpers', () => {
@@ -427,19 +427,12 @@ describe('Utility Helpers', () => {
     })
   })
 
-  describe('getSource', () => {
-    test('should return correct image paths for light mode', () => {
-      expect(getSource('C', false)).toBe('/images/club.png')
-      expect(getSource('H', false)).toBe('/images/heart.png')
-      expect(getSource('S', false)).toBe('/images/spade.png')
-      expect(getSource('D', false)).toBe('/images/diamond.png')
-    })
-
-    test('should return dark mode image paths', () => {
-      expect(getSource('C', true)).toBe('/images/club-dark.png')
-      expect(getSource('H', true)).toBe('/images/heart-dark.png')
-      expect(getSource('S', true)).toBe('/images/spade-dark.png')
-      expect(getSource('D', true)).toBe('/images/diamond-dark.png')
+  describe('getSuitSymbol', () => {
+    test('should return correct unicode symbols', () => {
+      expect(getSuitSymbol('C')).toBe('♣')
+      expect(getSuitSymbol('H')).toBe('♥')
+      expect(getSuitSymbol('S')).toBe('♠')
+      expect(getSuitSymbol('D')).toBe('♦')
     })
   })
 })
