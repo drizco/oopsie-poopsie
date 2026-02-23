@@ -1,5 +1,3 @@
-/* @styled-jsx=global */
-
 :focus-visible {
   outline: 3px solid #008ac4;
   outline-offset: 2px;
@@ -121,11 +119,6 @@ input {
   }
 }
 
-.form-control,
-.btn {
-  border-radius: 0;
-}
-
 header {
   padding: 2vw;
   text-align: center;
@@ -199,4 +192,29 @@ header {
 .spinner-anim-leave.spinner-anim-leave-active {
   opacity: 0.01;
   transition: opacity 100ms ease-out;
+}
+
+.playing-card {
+  background-color: $white;
+  border-color: $charcoal;
+}
+
+// Dark mode overrides for custom classes (MUI handles component theming via ThemeProvider)
+[data-color-scheme='dark'] {
+  .playing-card {
+    background-color: #000 !important;
+    border-color: #282c35 !important;
+  }
+
+  header {
+    border-bottom-color: #000;
+  }
+
+  a,
+  .red-text,
+  .player-row::before,
+  .player-score::before,
+  .player-name::after {
+    color: #faa7c4 !important;
+  }
 }

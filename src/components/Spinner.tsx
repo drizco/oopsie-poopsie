@@ -1,7 +1,6 @@
-import { Spinner } from 'reactstrap'
+import CircularProgress from '@mui/material/CircularProgress'
 import { useContext } from 'react'
 import SettingsContext from '../context/SettingsContext'
-import { PINK, RED } from '../utils/constants'
 
 interface SpinnerComponentProps {
   loading: boolean
@@ -16,7 +15,7 @@ const SpinnerComponent = ({ loading }: SpinnerComponentProps) => {
         backgroundColor: dark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)',
       }}
     >
-      <Spinner style={{ width: '3rem', height: '3rem', color: dark ? PINK : RED }} />
+      <CircularProgress size="3rem" color="primary" />
     </div>
   ) : null
 }

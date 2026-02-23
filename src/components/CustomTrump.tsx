@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { InputGroup, Input, Button } from 'reactstrap'
+import Box from '@mui/material/Box'
+import OutlinedInput from '@mui/material/OutlinedInput'
+import Button from '@mui/material/Button'
+import styles from '../styles/components/custom-trump.module.scss'
 
 interface CustomTrumpProps {
   className?: string
@@ -27,10 +30,11 @@ const CustomTrump = ({ className }: CustomTrumpProps) => {
   return (
     <div className={className}>
       {editMode ? (
-        <InputGroup>
-          <Input
-            innerRef={inputRef}
+        <Box sx={{ display: 'flex' }}>
+          <OutlinedInput
+            inputRef={inputRef}
             value={trumpName}
+            size="small"
             onChange={(e) => setTrumpName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -38,32 +42,20 @@ const CustomTrump = ({ className }: CustomTrumpProps) => {
               }
             }}
           />
-          <Button color="primary" onClick={save}>
+          <Button variant="contained" color="primary" onClick={save}>
             save
           </Button>
-        </InputGroup>
+        </Box>
       ) : (
         <button
           type="button"
+          className={styles.trump_button}
           aria-label={`Edit trump name: ${trumpName}`}
           onClick={() => setEditMode(true)}
         >
           {trumpName}
         </button>
       )}
-      <style jsx>{`
-        button {
-          text-transform: uppercase;
-          background: transparent;
-          border: none;
-          padding: 0;
-          font-family: inherit;
-          font-size: inherit;
-          font-weight: inherit;
-          color: inherit;
-          cursor: crosshair;
-        }
-      `}</style>
     </div>
   )
 }

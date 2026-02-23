@@ -1,7 +1,6 @@
 // Jest setup for frontend/component tests
-import { jest, beforeAll, afterAll, expect } from '@jest/globals'
+import { jest, expect } from '@jest/globals'
 import * as matchers from '@testing-library/jest-dom/matchers'
-
 // Extend expect with jest-dom matchers
 expect.extend(matchers)
 
@@ -71,23 +70,3 @@ global.IntersectionObserver = class IntersectionObserver {
   }
   unobserve() {}
 }
-
-// Suppress console errors in tests (comment out for debugging)
-const originalError = console.error
-beforeAll(() => {
-  console.error = (...args) => {
-    if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('Warning: ReactDOM.render') ||
-        args[0].includes('Not implemented: HTMLFormElement.prototype.submit') ||
-        args[0].includes('non-boolean attribute `jsx`'))
-    ) {
-      return
-    }
-    originalError.call(console, ...args)
-  }
-})
-
-afterAll(() => {
-  console.error = originalError
-})

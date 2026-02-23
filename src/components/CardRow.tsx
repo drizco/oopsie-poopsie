@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react'
+import Box from '@mui/material/Box'
 
 import styles from '../styles/components/card-row.module.scss'
 import { getSuitSymbol, getColor, isLegal } from '../utils/helpers'
@@ -39,13 +40,24 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
 
   return (
     <>
-      <ul className={styles.card_row} aria-label="Your hand — select a card to play">
+      <Box
+        component="ul"
+        className={styles.card_row}
+        aria-label="Your hand — select a card to play"
+        sx={{
+          '@media only screen and (max-width: 768px)': {
+            height: `${cardWidth * 1.5 * 0.6}vw`,
+            maxHeight: `${36 * 0.6}vw`,
+          },
+        }}
+      >
         {cards &&
           cards.map((card) => {
             const legal = isLegal({ hand: cards, card, leadSuit })
             const isSelected = !!(queuedCard && queuedCard.cardId === card.cardId)
             return (
-              <li
+              <Box
+                component="li"
                 className={classNames({
                   'playing-card': true,
                   [styles.shake]: illegalCard === card.cardId,
@@ -53,6 +65,20 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
                 })}
                 data-card-id={card.cardId}
                 key={card.cardId}
+                sx={{
+                  '@media only screen and (max-width: 768px)': {
+                    width: `${cardWidth}vw`,
+                    height: `${cardWidth * 1.5}vw`,
+                    maxWidth: '24vw',
+                    maxHeight: '36vw',
+                    '& > div > span:first-of-type': {
+                      fontSize: `min(${cardWidth * 0.3}vw, ${24 * 0.3}vw)`,
+                    },
+                    '& > div > span:last-of-type': {
+                      fontSize: `min(${cardWidth * 0.35}vw, 10vw)`,
+                    },
+                  },
+                }}
               >
                 <div aria-hidden="true">
                   <span style={{ color: getColor(card.suit, dark) }}>
@@ -76,32 +102,10 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
                     handleCardAction(card)
                   }}
                 />
-              </li>
+              </Box>
             )
           })}
-      </ul>
-      <style jsx>{`
-        @media only screen and (max-width: 768px) {
-          li {
-            width: ${cardWidth}vw;
-            height: ${cardWidth * 1.5}vw;
-            max-width: 24vw;
-            max-height: 36vw;
-          }
-
-          li > div > span:first-child {
-            font-size: min(${cardWidth * 0.3}vw, ${24 * 0.3}vw);
-          }
-          li > div > span:last-child {
-            font-size: min(${cardWidth * 0.35}vw, 10vw);
-          }
-
-          ul {
-            height: ${cardWidth * 1.5 * 0.6}vw;
-            max-height: ${36 * 0.6}vw;
-          }
-        }
-      `}</style>
+      </Box>
     </>
   )
 }

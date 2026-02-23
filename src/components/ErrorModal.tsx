@@ -1,24 +1,21 @@
-import React, { useContext } from 'react'
-import { Modal, ModalBody, Button } from 'reactstrap'
+import { useContext } from 'react'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
+import Button from '@mui/material/Button'
 import AppStateContext from '../context/AppStateContext'
 
 const ErrorModal = () => {
   const { error, setError } = useContext(AppStateContext)
   return (
-    <Modal
-      isOpen={!!error}
-      toggle={() => {
-        setError(null)
-      }}
-    >
-      <ModalBody>
+    <Dialog open={!!error} onClose={() => setError(null)}>
+      <DialogContent>
         <h2>Uh oh, something went wrong...</h2>
         {error && <p>{error}</p>}
-        <Button color="secondary" onClick={() => setError(null)}>
+        <Button variant="outlined" onClick={() => setError(null)}>
           Dismiss
         </Button>
-      </ModalBody>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   )
 }
 

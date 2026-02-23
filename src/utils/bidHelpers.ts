@@ -28,6 +28,9 @@ export function calculateAdjustedBid(
     newBid = increment ? newBid + 1 : newBid - 1
   }
 
+  if (newBid < 0) return 0
+  if (newBid > numCards) return numCards
+
   // Ensure bid is within valid range
-  return newBid >= 0 && newBid <= numCards ? newBid : currentBid
+  return newBid
 }
