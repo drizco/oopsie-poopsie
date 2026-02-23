@@ -1,4 +1,6 @@
-import { Form, FormGroup, Label, Input, Button, Row, Col } from 'reactstrap'
+import Box from '@mui/material/Box'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
 import type { ChangeEvent } from 'react'
 
 interface JoinGameFormProps {
@@ -12,26 +14,28 @@ interface JoinGameFormProps {
  */
 const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }: JoinGameFormProps) => {
   return (
-    <Col xs="4" className="mb-5">
-      <Row>
-        <Form>
-          <FormGroup>
-            <Label for="name">User Name</Label>
-            <Input
-              data-lpignore="true"
-              type="text"
-              name="playerName"
-              id="name"
-              value={playerName || ''}
-              onChange={onPlayerNameChange}
-            />
-          </FormGroup>
-          <Button disabled={!playerName} color="success" onClick={onJoin}>
-            JOIN
-          </Button>
-        </Form>
-      </Row>
-    </Col>
+    <Box sx={{ mb: 5 }}>
+      <form>
+        <TextField
+          fullWidth
+          label="User Name"
+          id="name"
+          name="playerName"
+          value={playerName || ''}
+          onChange={onPlayerNameChange}
+          slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
+          sx={{ mb: 2 }}
+        />
+        <Button
+          variant="contained"
+          color="success"
+          disabled={!playerName}
+          onClick={onJoin}
+        >
+          JOIN
+        </Button>
+      </form>
+    </Box>
   )
 }
 

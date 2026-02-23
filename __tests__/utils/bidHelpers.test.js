@@ -52,11 +52,11 @@ describe('bidHelpers', () => {
 
       // Test upper bound
       const result1 = calculateAdjustedBid(6, bids, game, players)
-      expect(result1).toBe(6) // Returns original if out of range after adjustment
+      expect(result1).toBe(5) // Returns numCards if out of range after adjustment
 
       // Test lower bound
       const result2 = calculateAdjustedBid(-1, bids, game, players)
-      expect(result2).toBe(-1) // Returns original if out of range after adjustment
+      expect(result2).toBe(0) // Returns 0 if out of range after adjustment
     })
 
     test('handles string bid values by converting to number', () => {

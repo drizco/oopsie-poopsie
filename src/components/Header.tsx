@@ -1,19 +1,16 @@
 import { useState, useContext, useEffect } from 'react'
 import Link from 'next/link'
-import { Modal, ModalHeader, ModalBody } from 'reactstrap'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import Box from '@mui/material/Box'
 import SettingsContext from '../context/SettingsContext'
 import styles from '../styles/components/header.module.scss'
 import { Sound, Mute, Sun, Moon } from '../components/Icons'
 
 const Header = () => {
   const [showRules, setShowRules] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const { mute, dark, setMute, setDark } = useContext(SettingsContext)
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true)
-  }, [])
 
   const toggleRules = () => {
     setShowRules(!showRules)
@@ -36,50 +33,49 @@ const Header = () => {
         <h1>oh shit...</h1>
 
         <div className={styles.rules}>
-          {mounted && (
-            <>
-              <button
-                type="button"
-                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-pressed={dark}
-                onClick={handleDark}
-              >
-                {dark ? (
-                  <Sun className={styles.icon} />
-                ) : (
-                  <Moon className={styles.icon} />
-                )}
-              </button>
-              <button
-                type="button"
-                aria-label={mute ? 'Unmute sounds' : 'Mute sounds'}
-                aria-pressed={mute}
-                onClick={handleSound}
-              >
-                {mute ? (
-                  <Mute className={styles.icon} />
-                ) : (
-                  <Sound className={styles.icon} />
-                )}
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-pressed={dark}
+            onClick={handleDark}
+          >
+            {dark ? <Sun className={styles.icon} /> : <Moon className={styles.icon} />}
+          </button>
+          <button
+            type="button"
+            aria-label={mute ? 'Unmute sounds' : 'Mute sounds'}
+            aria-pressed={mute}
+            onClick={handleSound}
+          >
+            {mute ? <Mute className={styles.icon} /> : <Sound className={styles.icon} />}
+          </button>
           <button onClick={toggleRules} aria-label="Show rules">
             <span className="red-text">rules</span>
           </button>
         </div>
       </header>
-      <Modal
-        centered
-        size="lg"
-        isOpen={showRules}
-        toggle={toggleRules}
-        contentClassName="rules-modal"
-      >
-        <ModalHeader tag={'h2'} toggle={toggleRules}>
-          rules
-        </ModalHeader>
-        <ModalBody>
+      <Dialog open={showRules} onClose={toggleRules} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>rules</span>
+            <button
+              type="button"
+              onClick={toggleRules}
+              aria-label="Close rules"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.5rem',
+                lineHeight: 1,
+                color: 'inherit',
+              }}
+            >
+              ×
+            </button>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
           <p>
             oh shit is a classic card game. it can be
             played with anywhere from 2 to 51 players (technically), but it&apos;s best
@@ -152,8 +148,8 @@ const Header = () => {
             bids&apos; option was chosen when initiating the game, one point is earned for
             each trick won, regardless of whether the player made their bid correctly.
           </p>
-        </ModalBody>
-      </Modal>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -7,6 +7,7 @@ import {
   replayGame,
   updatePlayer,
 } from '../../functions/game'
+import { TEST_ERROR } from '../setup/constants'
 
 // Mock the deck
 jest.mock('../../functions/deck')
@@ -119,7 +120,7 @@ describe('Game Functions - newGame', () => {
 
   test('should handle errors and return 500', async () => {
     mockRef.mockImplementation(() => ({
-      once: jest.fn(() => Promise.reject(new Error('Database error'))),
+      once: jest.fn(() => Promise.reject(new Error(TEST_ERROR))),
     }))
 
     await newGame(mockReq, mockRes)
@@ -286,7 +287,7 @@ describe('Game Functions - addPlayer', () => {
 
   test('should handle errors', async () => {
     mockRef.mockImplementation(() => ({
-      once: jest.fn(() => Promise.reject(new Error('Database error'))),
+      once: jest.fn(() => Promise.reject(new Error(TEST_ERROR))),
     }))
 
     await addPlayer(mockReq, mockRes)
@@ -423,7 +424,7 @@ describe('Game Functions - submitBid', () => {
         }
       }
       return {
-        update: jest.fn(() => Promise.reject(new Error('Database error'))),
+        update: jest.fn(() => Promise.reject(new Error(TEST_ERROR))),
         once: jest.fn(() => Promise.resolve({ val: () => ({}) })),
       }
     })
@@ -487,7 +488,7 @@ describe('Game Functions - updatePlayer', () => {
 
   test('should handle errors', async () => {
     mockRef.mockImplementation(() => ({
-      update: jest.fn(() => Promise.reject(new Error('Database error'))),
+      update: jest.fn(() => Promise.reject(new Error(TEST_ERROR))),
     }))
 
     await updatePlayer(mockReq, mockRes)
@@ -534,7 +535,7 @@ describe('Game Functions - replayGame', () => {
 
   test('should handle errors', async () => {
     mockRef.mockImplementation(() => ({
-      update: jest.fn(() => Promise.reject(new Error('Database error'))),
+      update: jest.fn(() => Promise.reject(new Error(TEST_ERROR))),
     }))
 
     await replayGame(mockReq, mockRes)

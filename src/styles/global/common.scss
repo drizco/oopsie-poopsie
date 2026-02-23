@@ -1,5 +1,3 @@
-/* @styled-jsx=global */
-
 :focus-visible {
   outline: 3px solid #008ac4;
   outline-offset: 2px;
@@ -121,11 +119,6 @@ input {
   }
 }
 
-.form-control,
-.btn {
-  border-radius: 0;
-}
-
 header {
   padding: 2vw;
   text-align: center;
@@ -201,18 +194,12 @@ header {
   transition: opacity 100ms ease-out;
 }
 
-// Dark mode: override Bootstrap's default dark palette with our custom colors
-[data-bs-theme='dark'] {
-  --bs-body-bg: #282c35;
-  --bs-body-bg-rgb: 40, 44, 53;
-  --bs-body-color: rgba(255, 255, 255, 0.88);
-  --bs-modal-bg: #282c35;
-  --bs-link-color: #faa7c4;
-  --bs-link-hover-color: #faa7c4;
-  --bs-link-color-rgb: 250, 167, 196;
+.playing-card {
+  background-color: $white;
+  border-color: $charcoal;
 }
 
-// Dark mode: custom non-Bootstrap classes
+// Dark mode overrides for custom classes (MUI handles component theming via ThemeProvider)
 [data-color-scheme='dark'] {
   .playing-card {
     background-color: #000 !important;

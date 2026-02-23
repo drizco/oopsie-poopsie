@@ -18,7 +18,7 @@ async function createGame(page: Page, playerName: string, numCards = 1): Promise
   await page.locator('#name').fill(playerName)
   await page.getByRole('button', { name: 'NEW GAME' }).click()
 
-  await expect(page.getByText('Game Code')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Game Code' })).toBeVisible()
   const gameId = (await page.locator('h2.red-text').textContent())?.trim()
   if (!gameId) throw new Error('Game ID not found after creating game')
   return gameId
@@ -148,7 +148,7 @@ test.describe('Game Creation', () => {
     await page.locator('#name').fill('TestPlayer')
     await page.getByRole('button', { name: 'NEW GAME' }).click()
 
-    await expect(page.getByText('Game Code')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Game Code' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'ENTER GAME' })).toBeVisible()
 
     // Game ID should be a non-empty string

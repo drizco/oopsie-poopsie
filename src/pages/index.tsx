@@ -2,21 +2,18 @@ import { useState, useRef, useContext, useEffect } from 'react'
 import type { ChangeEvent, MouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import {
-  Container,
-  Button,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  InputGroup,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownToggle,
-  Row,
-  Col,
-} from 'reactstrap'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Checkbox from '@mui/material/Checkbox'
+import Container from '@mui/material/Container'
+import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import InputAdornment from '@mui/material/InputAdornment'
+import InputLabel from '@mui/material/InputLabel'
+import MenuItem from '@mui/material/MenuItem'
+import OutlinedInput from '@mui/material/OutlinedInput'
+import Select from '@mui/material/Select'
+import TextField from '@mui/material/TextField'
 import { newGame, parseApiError } from '../utils/api'
 import styles from '../styles/pages/home.module.scss'
 import { CopyIcon } from '../components/Icons'
@@ -36,11 +33,15 @@ const CreateGame = () => {
   const [timeLimit, setTimeLimit] = useState('')
   const [numCards, setNumCards] = useState(5)
   const [create, setCreate] = useState(true)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const gameUrlRef = useRef<HTMLInputElement>(null)
 
   const { setLoading, setError } = useContext(AppStateContext)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -48,13 +49,9 @@ const CreateGame = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const toggle = () => {
-    setDropdownOpen((prevState) => !prevState)
-  }
-
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    switch (name) {
+    const { name: fieldName, value } = e.target
+    switch (fieldName) {
       case 'name':
         setName(value)
         break
@@ -74,13 +71,6 @@ const CreateGame = () => {
     if (newNumCards <= 10 && newNumCards >= 1) {
       setNumCards(newNumCards)
     }
-  }
-
-  const handleDropDown = (e: MouseEvent, val?: string | number) => {
-    setTimeLimit(val ? String(val) : '')
-    setTimeout(() => {
-      setDropdownOpen(false)
-    }, 10)
   }
 
   const initializeGame = async () => {
@@ -130,36 +120,49 @@ const CreateGame = () => {
     <Container id={styles.home}>
       {gameId ? (
         <>
-          <Row className="justify-content-center m-4">
-            <Col xs="10" sm="7">
+          <Box sx={{ display: 'flex', justifyContent: 'center', m: 4 }}>
+            <Box sx={{ width: { xs: '83.33%', sm: '58.33%' } }}>
               <h2>Game Code</h2>
-              <h2 className="red-text m-4">{gameId}</h2>
-            </Col>
-          </Row>
-          <Row className="text-center m-4">
+              <h2 className="red-text" style={{ margin: '1rem' }}>{gameId}</h2>
+            </Box>
+          </Box>
+          <Box sx={{ textAlign: 'center', m: 4 }}>
             <h3>Share this link to invite other players</h3>
-          </Row>
-          <Row className="justify-content-center" style={{ position: 'relative' }}>
-            <Col xs="10" sm="7">
-              <InputGroup>
-                <Input value={url} readOnly innerRef={gameUrlRef} data-lpignore="true" />
-                <Button onClick={copyToClipboard}>
-                  <CopyIcon style={{ width: 18 }} />
-                </Button>
-              </InputGroup>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+            <Box sx={{ width: { xs: '83.33%', sm: '58.33%' } }}>
+              <OutlinedInput
+                fullWidth
+                value={url}
+                readOnly
+                inputRef={gameUrlRef}
+                inputProps={{ 'data-lpignore': 'true' }}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <button
+                      type="button"
+                      onClick={copyToClipboard}
+                      aria-label="Copy game URL"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                      <CopyIcon style={{ width: 18 }} />
+                    </button>
+                  </InputAdornment>
+                }
+              />
               <h6 className={styles.copied}>{copySuccess}</h6>
-            </Col>
-          </Row>
-          <Row className="text-center m-5">
+            </Box>
+          </Box>
+          <Box sx={{ textAlign: 'center', m: 5 }}>
             <Link href={`/game/${gameId}`} className={styles.enter_game_button}>
               ENTER GAME
             </Link>
-          </Row>
+          </Box>
         </>
       ) : (
-        <Row className="justify-content-center">
-          <Col xs="12" sm="9">
-            <Row className="my-5">
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Box sx={{ width: { xs: '100%', sm: '75%' } }}>
+            <Box sx={{ my: 5 }}>
               <div
                 role="tablist"
                 aria-label="Game options"
@@ -169,7 +172,7 @@ const CreateGame = () => {
                   else if (e.key === 'ArrowLeft') setCreate(true)
                 }}
               >
-                <Col xs="6">
+                <Box sx={{ flex: 1 }}>
                   <button
                     role="tab"
                     type="button"
@@ -185,8 +188,8 @@ const CreateGame = () => {
                   >
                     create a new game
                   </button>
-                </Col>
-                <Col xs="6">
+                </Box>
+                <Box sx={{ flex: 1 }}>
                   <button
                     role="tab"
                     type="button"
@@ -202,119 +205,109 @@ const CreateGame = () => {
                   >
                     join an existing game
                   </button>
-                </Col>
+                </Box>
               </div>
-            </Row>
-          </Col>
-          <Col xs="10" sm="7">
+            </Box>
+          </Box>
+          <Box sx={{ width: { xs: '83.33%', sm: '58.33%' } }}>
             <div
               id="panel-create"
               role="tabpanel"
               aria-labelledby="tab-create"
               hidden={!create}
             >
-              <Form>
-                <FormGroup>
-                  <Label for="game">Game Name</Label>
-                  <Input
-                    data-lpignore="true"
-                    type="text"
-                    name="game"
-                    id="game"
-                    value={game}
-                    onChange={handleChange}
-                    placeholder="optional"
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label for="name">User Name</Label>
-                  <Input
-                    data-lpignore="true"
-                    type="text"
-                    name="name"
-                    id="name"
-                    value={name}
-                    onChange={handleChange}
-                  />
-                </FormGroup>
-                <Col xs="12" className="p-0">
-                  <FormGroup>
-                    <Label for="num-cards">Number of cards</Label>
-                    <InputGroup>
-                      <Button color="danger" onClick={() => handleNumCards(false)}>
-                        -
-                      </Button>
-                      <Input
-                        data-lpignore="true"
-                        type="text"
-                        value={numCards}
-                        name="num-cards"
-                        id="num-cards"
-                        className={styles.num_cards}
-                        readOnly
-                      />
-                      <Button color="success" onClick={() => handleNumCards(true)}>
-                        +
-                      </Button>
-                    </InputGroup>
-                  </FormGroup>
-                </Col>
+              <form>
+                <TextField
+                  fullWidth
+                  label="Game Name"
+                  id="game"
+                  name="game"
+                  value={game}
+                  onChange={handleChange}
+                  placeholder="optional"
+                  inputProps={{ 'data-lpignore': 'true' }}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  key={isClient ? 'client' : 'server'}
+                  fullWidth
+                  label="User Name"
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={handleChange}
+                  inputProps={{ 'data-lpignore': 'true' }}
+                  sx={{ mb: 2 }}
+                />
 
-                <Col xs="12" className="p-0 mb-3">
-                  <Label>Time limit</Label>
+                <Box sx={{ mb: 2 }}>
+                  <label htmlFor="num-cards" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                    Number of cards
+                  </label>
+                  <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+                    <Button variant="contained" color="error" onClick={() => handleNumCards(false)}>
+                      -
+                    </Button>
+                    <input
+                      data-lpignore="true"
+                      type="text"
+                      value={numCards}
+                      name="num-cards"
+                      id="num-cards"
+                      className={styles.num_cards}
+                      readOnly
+                    />
+                    <Button variant="contained" color="success" onClick={() => handleNumCards(true)}>
+                      +
+                    </Button>
+                  </Box>
+                </Box>
 
-                  <Dropdown isOpen={dropdownOpen} toggle={toggle}>
-                    <DropdownToggle caret>
-                      {timeLimit ? `${timeLimit} seconds` : 'None'}
-                    </DropdownToggle>
-                    <DropdownMenu flip={true} style={{ borderRadius: 0 }}>
-                      <DropdownItem onClick={(e) => handleDropDown(e)}>none</DropdownItem>
-                      <DropdownItem onClick={(e) => handleDropDown(e, 90)}>
-                        90 seconds
-                      </DropdownItem>
-                      <DropdownItem onClick={(e) => handleDropDown(e, 60)}>
-                        60 seconds
-                      </DropdownItem>
-                      <DropdownItem onClick={(e) => handleDropDown(e, 30)}>
-                        30 seconds
-                      </DropdownItem>
-                      <DropdownItem onClick={(e) => handleDropDown(e, 10)}>
-                        10 seconds
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                </Col>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="time-limit-label">Time limit</InputLabel>
+                  <Select
+                    labelId="time-limit-label"
+                    id="time-limit"
+                    value={timeLimit}
+                    label="Time limit"
+                    onChange={(e) => setTimeLimit(String(e.target.value))}
+                  >
+                    <MenuItem value="">None</MenuItem>
+                    <MenuItem value="90">90 seconds</MenuItem>
+                    <MenuItem value="60">60 seconds</MenuItem>
+                    <MenuItem value="30">30 seconds</MenuItem>
+                    <MenuItem value="10">10 seconds</MenuItem>
+                  </Select>
+                </FormControl>
 
-                <FormGroup check>
-                  <Label check>
-                    <Input
-                      type="checkbox"
+                <FormControlLabel
+                  control={
+                    <Checkbox
                       id="bid-checkbox"
                       checked={dirty}
                       onChange={() => setDirty(!dirty)}
-                    />{' '}
-                    Dirty bids only
-                  </Label>
-                </FormGroup>
+                    />
+                  }
+                  label="Dirty bids only"
+                />
 
-                <FormGroup check>
-                  <Label check>
-                    <Input
-                      type="checkbox"
+                <FormControlLabel
+                  control={
+                    <Checkbox
                       id="bid-point-checkbox"
                       checked={bidPoints}
                       onChange={() => setBidPoints(!bidPoints)}
-                    />{' '}
-                    Earn points for bad bids
-                  </Label>
-                </FormGroup>
+                    />
+                  }
+                  label="Earn points for bad bids"
+                />
 
-                <div className="d-flex justify-content-center mt-3">
-                  <Button disabled={!name} color="primary" onClick={initializeGame}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Button variant="contained" disabled={!name} color="primary" onClick={initializeGame}>
                     NEW GAME
                   </Button>
-                </div>
-              </Form>
+                </Box>
+              </form>
             </div>
             <div
               id="panel-join"
@@ -322,32 +315,32 @@ const CreateGame = () => {
               aria-labelledby="tab-join"
               hidden={create}
             >
-              <Form>
-                <FormGroup>
-                  <Label for="game-code">Game Code</Label>
-                  <Input
-                    data-lpignore="true"
-                    type="text"
-                    name="game-code"
-                    id="game-code"
-                    value={gameCode}
-                    onChange={handleChange}
-                    placeholder="Jb2X"
-                  />
-                </FormGroup>
-                <div className="d-flex justify-content-center mt-3">
+              <form>
+                <TextField
+                  fullWidth
+                  label="Game Code"
+                  id="game-code"
+                  name="game-code"
+                  value={gameCode}
+                  onChange={handleChange}
+                  placeholder="Jb2X"
+                  inputProps={{ 'data-lpignore': 'true' }}
+                  sx={{ mb: 2 }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                   <Button
+                    variant="contained"
                     disabled={gameCode.length < 4}
                     color="primary"
                     onClick={joinGame}
                   >
                     JOIN GAME
                   </Button>
-                </div>
-              </Form>
+                </Box>
+              </form>
             </div>
-          </Col>
-        </Row>
+          </Box>
+        </Box>
       )}
     </Container>
   )

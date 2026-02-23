@@ -41,10 +41,10 @@ describe('Spinner Component', () => {
     })
   })
 
-  test('renders reactstrap Spinner component', () => {
+  test('renders MUI CircularProgress component', () => {
     const { container } = render(<SpinnerComponent loading={true} />)
 
-    // Reactstrap Spinner renders with class 'spinner-border'
-    expect(container.querySelector('.spinner-border')).toBeInTheDocument()
+    // MUI CircularProgress renders with role="progressbar"
+    expect(container.querySelector('[role="progressbar"]')).toBeInTheDocument()
   })
 })

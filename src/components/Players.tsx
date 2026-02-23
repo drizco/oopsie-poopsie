@@ -1,16 +1,10 @@
 import classNames from 'classnames'
 import { useContext } from 'react'
-import {
-  Button,
-  Col,
-  Container,
-  Form,
-  Input,
-  InputGroup,
-  Modal,
-  ModalBody,
-  Row,
-} from 'reactstrap'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
+import Grid from '@mui/material/Grid'
 import SettingsContext from '../context/SettingsContext'
 import TimerContext from '../context/TimerContext'
 import styles from '../styles/components/players.module.scss'
@@ -56,9 +50,10 @@ const Players = ({
 }: PlayersProps) => {
   const { dark } = useContext(SettingsContext)
   const { timer } = useContext(TimerContext)
-  const newPlayers = playerOrder.length > 0
-    ? playerOrder.map((id) => players[id]).filter(Boolean)
-    : Object.values(players)
+  const newPlayers =
+    playerOrder.length > 0
+      ? playerOrder.map((id) => players[id]).filter(Boolean)
+      : Object.values(players)
 
   return (
     <ul className={styles.players} aria-label="Players and scores">
@@ -74,22 +69,29 @@ const Players = ({
 
           return (
             <li key={playerId}>
-              <Row
+              <Grid
+                container
                 className={classNames({
                   [styles.current_player_arrow]: isCurrent,
                   [styles.player_row]: true,
                   'player-row': true,
                 })}
               >
-                <Col xs="4" className="d-flex align-items-center">
+                <Grid size={4} sx={{ display: 'flex', alignItems: 'center' }}>
                   <div className="player-score" data-player-score={playerScore}>
                     {timeLimit &&
                       thisPlayer !== currentPlayer &&
                       currentPlayer === playerId &&
                       timer >= 0 &&
                       timer <= timerShowMax && (
-                        <div className={styles.countdown} aria-live="polite" aria-label={`${timer} seconds remaining`}>
-                          <span className={`red-text ${styles.countdown_number}`}>{timer}</span>
+                        <div
+                          className={styles.countdown}
+                          aria-live="polite"
+                          aria-label={`${timer} seconds remaining`}
+                        >
+                          <span className={`red-text ${styles.countdown_number}`}>
+                            {timer}
+                          </span>
                         </div>
                       )}
                     <h2
@@ -103,23 +105,33 @@ const Players = ({
                       {name}
                     </h2>
                   </div>
-                </Col>
+                </Grid>
                 {bids && bids[playerId] != null && (
-                  <Col xs="3" sm="4" className="d-flex align-items-center">
-                    <Row aria-live="polite">
-                      <Col xs="12" sm="6">
+                  <Grid
+                    size={{ xs: 3, sm: 4 }}
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                  >
+                    <Box
+                      aria-live="polite"
+                      sx={{ display: 'flex', flexWrap: 'wrap', flexDirection: 'row' }}
+                    >
+                      <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
                         <p className={styles.bid_won_text}>{`Bid: ${bids[playerId]}`}</p>
-                      </Col>
-                      <Col xs="12" sm="6">
-                        <p className={styles.bid_won_text}>{`Won: ${roundScore[playerId] || '0'}`}</p>
-                      </Col>
-                    </Row>
-                  </Col>
+                      </Box>
+                      <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
+                        <p
+                          className={styles.bid_won_text}
+                        >{`Won: ${roundScore[playerId] || '0'}`}</p>
+                      </Box>
+                    </Box>
+                  </Grid>
                 )}
                 {trick && trick.cards && trick.cards[playerId] && (
-                  <Col xs="5" sm="4">
+                  <Grid size={{ xs: 5, sm: 4 }}>
                     <div className={styles.card}>
-                      <span style={{ color: getColor(trick.cards[playerId].suit, dark) }}>{getSuitSymbol(trick.cards[playerId].suit)}</span>
+                      <span style={{ color: getColor(trick.cards[playerId].suit, dark) }}>
+                        {getSuitSymbol(trick.cards[playerId].suit)}
+                      </span>
                       <span
                         className={styles.card_value}
                         style={{
@@ -129,85 +141,80 @@ const Players = ({
                         {trick.cards[playerId].value}
                       </span>
                     </div>
-                  </Col>
+                  </Grid>
                 )}
-              </Row>
-              <Modal
-                centered
-                isOpen={
+              </Grid>
+              <Dialog
+                open={
                   status === 'bid' &&
                   !winnerModalShowing &&
                   thisPlayer === playerId &&
                   currentPlayer === playerId
                 }
-                onClosed={afterBid}
+                slotProps={{ transition: { onExited: afterBid } }}
               >
-                <ModalBody>
-                  <Container>
-                    <Row className="text-center">
-                      <h2>Bid</h2>
-                    </Row>
-                    <Row className="justify-content-center mb-3">
-                      <div>
-                        {newPlayers &&
-                          newPlayers
-                            .filter((p) => !!bids && bids[p.playerId] != null)
-                            .map(({ playerId, name }) => (
-                              <p
-                                className="mb-2"
-                                key={playerId}
-                              >{`${name}: ${bids?.[playerId]}`}</p>
-                            ))}
-                      </div>
-                    </Row>
-                    <Row className="justify-content-center">
-                      <Form>
-                        <InputGroup>
-                          <Button
-                            className={styles.toggle_button}
-                            color="danger"
-                            aria-label="Decrease bid"
-                            onClick={(e) =>
-                              handleToggle(false, (e.target as HTMLButtonElement).value)
-                            }
-                          >
-                            -
-                          </Button>
-                          <Input
-                            data-lpignore="true"
-                            type="text"
-                            value={bid}
-                            name="bid"
-                            id="bid"
-                            aria-label="Current bid"
-                            className={classNames(styles.toggle_results, 'main-text')}
-                            readOnly
-                          />
-                          <Button
-                            className={styles.toggle_button}
-                            color="success"
-                            aria-label="Increase bid"
-                            onClick={(e) =>
-                              handleToggle(true, (e.target as HTMLButtonElement).value)
-                            }
-                          >
-                            +
-                          </Button>
-                        </InputGroup>
-                      </Form>
-                    </Row>
-                    <Row className="justify-content-center mt-5">
-                      <Button
-                        className={styles.bid_button}
-                        color="primary"
-                        onClick={() => submitBid()}
-                      >
-                        BID
-                      </Button>
-                    </Row>
-                  </Container>
-                </ModalBody>
-              </Modal>
+                <DialogContent>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <h2>Bid</h2>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                    <div>
+                      {newPlayers &&
+                        newPlayers
+                          .filter((p) => !!bids && bids[p.playerId] != null)
+                          .map(({ playerId: pid, name: pname }) => (
+                            <p style={{ marginBottom: '0.5rem' }} key={pid}>
+                              {`${pname}: ${bids?.[pid]}`}
+                            </p>
+                          ))}
+                    </div>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <form>
+                      <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          className={styles.toggle_button}
+                          aria-label="Decrease bid"
+                          onClick={(e) => handleToggle(false, e.currentTarget.value)}
+                        >
+                          -
+                        </Button>
+                        <input
+                          data-lpignore="true"
+                          type="text"
+                          value={bid}
+                          name="bid"
+                          id="bid"
+                          aria-label="Current bid"
+                          className={classNames(styles.toggle_results, 'main-text')}
+                          readOnly
+                        />
+                        <Button
+                          variant="contained"
+                          color="success"
+                          className={styles.toggle_button}
+                          aria-label="Increase bid"
+                          onClick={(e) => handleToggle(true, e.currentTarget.value)}
+                        >
+                          +
+                        </Button>
+                      </Box>
+                    </form>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      className={styles.bid_button}
+                      onClick={submitBid}
+                    >
+                      BID
+                    </Button>
+                  </Box>
+                </DialogContent>
+              </Dialog>
             </li>
           )
         })}

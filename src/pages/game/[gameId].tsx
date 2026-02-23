@@ -2,13 +2,25 @@ import { useEffect, useRef, useContext } from 'react'
 import { useRouter } from 'next/router'
 import type { GetServerSidePropsContext } from 'next'
 import Link from 'next/link'
-import { Container, Button, Row, Col, Modal, ModalBody, ModalHeader } from 'reactstrap'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Container from '@mui/material/Container'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Grid from '@mui/material/Grid'
+import Typography from '@mui/material/Typography'
 import AppStateContext from '../../context/AppStateContext'
 import SettingsContext from '../../context/SettingsContext'
 import TimerContext from '../../context/TimerContext'
 import styles from '../../styles/pages/game.module.scss'
 import CardRow from '../../components/CardRow'
-import { getSuitSymbol, getColor, getAvailableTricks, getWinner } from '../../utils/helpers'
+import {
+  getSuitSymbol,
+  getColor,
+  getAvailableTricks,
+  getWinner,
+} from '../../utils/helpers'
 import Players from '../../components/Players'
 import NotificationController from '../../components/NotificationController'
 import CustomTrump from '../../components/CustomTrump'
@@ -171,17 +183,25 @@ function Game({ gameId, isMobile }: GameProps) {
             timer <= timerShowMax
           }
         />
-        <Row className={styles.info_row}>
-          <Col xs="4">
-            {name && <h2 style={{ textDecoration: 'underline' }}>{name}</h2>}
-          </Col>
-          <Col xs="4">
+        <Grid container className={styles.info_row}>
+          <Grid size={4}>
+            {name && (
+              <Typography
+                variant="h5"
+                component="h2"
+                sx={{ textDecoration: 'underline', fontWeight: 'bold' }}
+              >
+                {name}
+              </Typography>
+            )}
+          </Grid>
+          <Grid size={4}>
             {isHost && status && status === 'pending' && (
-              <Row>
-                <Button color="success" onClick={startGameHandler}>
+              <Box>
+                <Button variant="contained" color="success" onClick={startGameHandler}>
                   START GAME
                 </Button>
-              </Row>
+              </Box>
             )}
             {status && (status === 'bid' || status === 'play' || status === 'over') && (
               <>
@@ -193,24 +213,28 @@ function Game({ gameId, isMobile }: GameProps) {
                 })}`}</p>
               </>
             )}
-          </Col>
-          <Col xs="2" className={styles.lead_trump_container}>
+          </Grid>
+          <Grid size={2} className={styles.lead_trump_container}>
             {leadSuit && (
               <>
                 <p className={styles.game_info}>LEAD</p>
-                <span style={{ color: getColor(leadSuit, dark) }}>{getSuitSymbol(leadSuit)}</span>
+                <Box component="span" sx={{ color: getColor(leadSuit, dark) }}>
+                  {getSuitSymbol(leadSuit)}
+                </Box>
               </>
             )}
-          </Col>
-          <Col xs="2" className={styles.lead_trump_container}>
+          </Grid>
+          <Grid size={2} className={styles.lead_trump_container}>
             {trump && (
               <>
                 <CustomTrump className={styles.game_info} />
-                <span style={{ color: getColor(trump, dark) }}>{getSuitSymbol(trump)}</span>
+                <Box component="span" sx={{ color: getColor(trump, dark) }}>
+                  {getSuitSymbol(trump)}
+                </Box>
               </>
             )}
-          </Col>
-        </Row>
+          </Grid>
+        </Grid>
         {!playerId && (
           <JoinGameForm
             playerName={playerName}
@@ -228,7 +252,7 @@ function Game({ gameId, isMobile }: GameProps) {
           bid={bid}
           dealer={dealer}
           handleToggle={handleToggle}
-          submitBid={submitBid}
+          submitBid={() => submitBid()}
           afterBid={() => updateState({ bid: 0 })}
           thisPlayer={playerId || ''}
           score={score}
@@ -244,94 +268,96 @@ function Game({ gameId, isMobile }: GameProps) {
         queuedCard={queuedCard}
         leadSuit={leadSuit || null}
       />
-      <Modal
-        centered
-        isOpen={Boolean(lastWinner)}
-        toggle={closeModal}
-        onOpened={() => {
-          setTimeout(() => {
-            closeModal()
-          }, 1000)
+      {/* Trick winner flash modal */}
+      <Dialog
+        open={Boolean(lastWinner)}
+        onClose={closeModal}
+        slotProps={{
+          transition: {
+            onEntered: () => {
+              setTimeout(() => {
+                closeModal()
+              }, 1000)
+            },
+          },
         }}
       >
-        <ModalBody>
-          <Container className="text-align-center">
-            {lastWinner && (
-              <h2 className="mb-3">{`${getWinner({ winner: lastWinner, players })} won!`}</h2>
-            )}
-            <Button onClick={closeModal}>CLOSE</Button>
-          </Container>
-        </ModalBody>
-      </Modal>
-      <Modal centered isOpen={status === 'over'}>
-        <ModalHeader>
-          <Row>
-            <Col className="d-flex justify-content-center mb-3">
-              <h1>game over</h1>
-            </Col>
-          </Row>
-        </ModalHeader>
-        <ModalBody>
+        <DialogContent sx={{ textAlign: 'center' }}>
+          {lastWinner && (
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ mb: 2, fontWeight: 'bold' }}
+            >{`${getWinner({ winner: lastWinner, players })} won!`}</Typography>
+          )}
+          <Button variant="outlined" onClick={closeModal}>
+            CLOSE
+          </Button>
+        </DialogContent>
+      </Dialog>
+      {/* Game over modal */}
+      <Dialog open={status === 'over'} onClose={() => {}}>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <h1>game over</h1>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
           {Object.values(players)
             .sort((a, b) => {
               const aScore = score && score[a.playerId] ? score[a.playerId] : 0
               const bScore = score && score[b.playerId] ? score[b.playerId] : 0
-              if (aScore < bScore) {
-                return 1
-              }
-              if (aScore > bScore) {
-                return -1
-              }
+              if (aScore < bScore) return 1
+              if (aScore > bScore) return -1
               return 0
             })
             .map((player) => (
-              <Row key={player.playerId}>
-                <Col xs="6">
+              <Box key={player.playerId} sx={{ display: 'flex' }}>
+                <Box sx={{ flex: 1 }}>
                   <h5>{player.name}</h5>
-                </Col>
-                <Col xs="6">
-                  <h5 style={{ textAlign: 'center' }}>
+                </Box>
+                <Box sx={{ flex: 1, textAlign: 'center' }}>
+                  <h5>
                     {score && score[player.playerId] ? score[player.playerId] : '0'}
                   </h5>
-                </Col>
-              </Row>
+                </Box>
+              </Box>
             ))}
-          <Row>
-            <Col>
-              {status === 'over' ? (
-                <>
-                  <div className="mt-3 text-center">
-                    <Button
-                      color="primary"
-                      onClick={() => {
-                        router.push('/')
-                      }}
-                    >
-                      HOME
+          <Box>
+            {status === 'over' ? (
+              <>
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      router.push('/')
+                    }}
+                  >
+                    HOME
+                  </Button>
+                </Box>
+                {isHost && (
+                  <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Button variant="contained" color="success" onClick={playAgain}>
+                      PLAY AGAIN
                     </Button>
-                  </div>
-                  {isHost && (
-                    <div className="mt-3 text-center">
-                      <Button color="success" onClick={playAgain}>
-                        PLAY AGAIN
-                      </Button>
-                    </div>
-                  )}
-                  {nextGame && (
-                    <div className="mt-3 text-center">
-                      <Link href={`/game/${nextGame}`}>JOIN NEXT GAME</Link>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Button color="primary" onClick={closeModal}>
-                  CLOSE
-                </Button>
-              )}
-            </Col>
-          </Row>
-        </ModalBody>
-      </Modal>
+                  </Box>
+                )}
+                {nextGame && (
+                  <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Link href={`/game/${nextGame}`}>JOIN NEXT GAME</Link>
+                  </Box>
+                )}
+              </>
+            ) : (
+              <Button variant="contained" color="primary" onClick={closeModal}>
+                CLOSE
+              </Button>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
       {(status === 'play' || status === 'bid') && (
         <TurnChange
           timeLimit={timeLimit}
