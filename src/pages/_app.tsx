@@ -163,6 +163,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           <style global jsx>{`
             body {
               background-color: ${dark ? DARK_BACKGROUND : LIGHT_BACKGROUND} !important;
+              color: ${dark ? DARK_TEXT : LIGHT_TEXT};
             }
             h1,
             h2,

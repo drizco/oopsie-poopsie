@@ -55,14 +55,14 @@ async function playRound(pages: Page[], numTricks: number): Promise<void> {
   await Promise.all(
     pages.map((p) =>
       p
-        .getByRole('button', { name: 'BID' })
+        .getByRole('button', { name: 'BID', exact: true })
         .waitFor({ timeout: 20000 })
         .then(async () => {
           const bidNum = Math.floor(Math.random() * (numTricks + 1))
           for (let i = 0; i < bidNum; i++) {
-            await p.getByRole('button', { name: '+' }).click()
+            await p.getByRole('button', { name: 'Increase bid' }).click()
           }
-          await p.getByRole('button', { name: 'BID' }).click()
+          await p.getByRole('button', { name: 'BID', exact: true }).click()
         })
     )
   )
@@ -70,7 +70,7 @@ async function playRound(pages: Page[], numTricks: number): Promise<void> {
   // Wait until every bid modal is dismissed before touching cards
   await Promise.all(
     pages.map((p) =>
-      p.getByRole('button', { name: 'BID' }).waitFor({ state: 'hidden', timeout: 10000 })
+      p.getByRole('button', { name: 'BID', exact: true }).waitFor({ state: 'hidden', timeout: 10000 })
     )
   )
   // Pause so the video shows the hand before play begins

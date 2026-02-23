@@ -160,32 +160,59 @@ const CreateGame = () => {
         <Row className="justify-content-center">
           <Col xs="12" sm="9">
             <Row className="my-5">
-              <Col xs="6">
-                <h2
-                  className={classnames({
-                    [styles.toggle]: true,
-                    [styles.selected]: create,
-                  })}
-                  onClick={() => setCreate(true)}
-                >
-                  create a new game
-                </h2>
-              </Col>
-              <Col xs="6">
-                <h2
-                  className={classnames({
-                    [styles.toggle]: true,
-                    [styles.selected]: !create,
-                  })}
-                  onClick={() => setCreate(false)}
-                >
-                  join an existing game
-                </h2>
-              </Col>
+              <div
+                role="tablist"
+                aria-label="Game options"
+                className={styles.tab_row}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowRight') setCreate(false)
+                  else if (e.key === 'ArrowLeft') setCreate(true)
+                }}
+              >
+                <Col xs="6">
+                  <button
+                    role="tab"
+                    type="button"
+                    id="tab-create"
+                    aria-selected={create}
+                    aria-controls="panel-create"
+                    tabIndex={create ? 0 : -1}
+                    className={classnames({
+                      [styles.toggle]: true,
+                      [styles.selected]: create,
+                    })}
+                    onClick={() => setCreate(true)}
+                  >
+                    create a new game
+                  </button>
+                </Col>
+                <Col xs="6">
+                  <button
+                    role="tab"
+                    type="button"
+                    id="tab-join"
+                    aria-selected={!create}
+                    aria-controls="panel-join"
+                    tabIndex={create ? -1 : 0}
+                    className={classnames({
+                      [styles.toggle]: true,
+                      [styles.selected]: !create,
+                    })}
+                    onClick={() => setCreate(false)}
+                  >
+                    join an existing game
+                  </button>
+                </Col>
+              </div>
             </Row>
           </Col>
           <Col xs="10" sm="7">
-            {create ? (
+            <div
+              id="panel-create"
+              role="tabpanel"
+              aria-labelledby="tab-create"
+              hidden={!create}
+            >
               <Form>
                 <FormGroup>
                   <Label for="game">Game Name</Label>
@@ -288,7 +315,13 @@ const CreateGame = () => {
                   </Button>
                 </div>
               </Form>
-            ) : (
+            </div>
+            <div
+              id="panel-join"
+              role="tabpanel"
+              aria-labelledby="tab-join"
+              hidden={create}
+            >
               <Form>
                 <FormGroup>
                   <Label for="game-code">Game Code</Label>
@@ -312,7 +345,7 @@ const CreateGame = () => {
                   </Button>
                 </div>
               </Form>
-            )}
+            </div>
           </Col>
         </Row>
       )}

@@ -37,10 +37,10 @@ describe('CardRow Component', () => {
   })
 
   test('cards are clickable and call playCard', () => {
-    const { container } = render(<CardRow {...defaultProps} />)
+    render(<CardRow {...defaultProps} />)
 
-    const firstCard = container.querySelector('.playing-card')
-    fireEvent.click(firstCard)
+    const firstCardButton = screen.getByRole('button', { name: 'A of H' })
+    fireEvent.click(firstCardButton)
 
     expect(defaultProps.playCard).toHaveBeenCalledWith(mockCards[0])
   })
@@ -78,20 +78,16 @@ describe('CardRow Component', () => {
       { rank: 5, suit: 'C', cardId: 'card-3', value: '6' },
     ]
 
-    const { container } = render(
-      <CardRow {...defaultProps} cards={cardsWithMixedSuits} leadSuit="H" />
-    )
-
-    const cardElements = container.querySelectorAll('.playing-card')
+    render(<CardRow {...defaultProps} cards={cardsWithMixedSuits} leadSuit="H" />)
 
     // Click a legal card (Heart)
-    fireEvent.click(cardElements[0])
+    fireEvent.click(screen.getByRole('button', { name: 'A of H' }))
     expect(defaultProps.playCard).toHaveBeenCalledWith(cardsWithMixedSuits[0])
 
     defaultProps.playCard.mockClear()
 
     // Click an illegal card (Club when Hearts were led) - should NOT call playCard
-    fireEvent.click(cardElements[2])
+    fireEvent.click(screen.getByRole('button', { name: '6 of C' }))
     expect(defaultProps.playCard).not.toHaveBeenCalled()
   })
 })
