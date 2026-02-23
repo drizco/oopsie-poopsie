@@ -61,7 +61,7 @@ const Players = ({
     : Object.values(players)
 
   return (
-    <ul className={styles.players}>
+    <ul className={styles.players} aria-label="Players and scores">
       {newPlayers &&
         newPlayers.map(({ playerId, present, name }) => {
           const isCurrent = currentPlayer === playerId
@@ -88,8 +88,8 @@ const Players = ({
                       currentPlayer === playerId &&
                       timer >= 0 &&
                       timer <= timerShowMax && (
-                        <div className={styles.countdown}>
-                          <h1 className="red-text">{timer}</h1>
+                        <div className={styles.countdown} aria-live="polite" aria-label={`${timer} seconds remaining`}>
+                          <span className={`red-text ${styles.countdown_number}`}>{timer}</span>
                         </div>
                       )}
                     <h2
@@ -106,12 +106,12 @@ const Players = ({
                 </Col>
                 {bids && bids[playerId] != null && (
                   <Col xs="3" sm="4" className="d-flex align-items-center">
-                    <Row>
+                    <Row aria-live="polite">
                       <Col xs="12" sm="6">
-                        <h3>{`Bid: ${bids[playerId]}`}</h3>
+                        <p className={styles.bid_won_text}>{`Bid: ${bids[playerId]}`}</p>
                       </Col>
                       <Col xs="12" sm="6">
-                        <h3>{`Won: ${roundScore[playerId] || '0'}`}</h3>
+                        <p className={styles.bid_won_text}>{`Won: ${roundScore[playerId] || '0'}`}</p>
                       </Col>
                     </Row>
                   </Col>
@@ -120,13 +120,14 @@ const Players = ({
                   <Col xs="5" sm="4">
                     <div className={styles.card}>
                       <span style={{ color: getColor(trick.cards[playerId].suit, dark) }}>{getSuitSymbol(trick.cards[playerId].suit)}</span>
-                      <h2
+                      <span
+                        className={styles.card_value}
                         style={{
                           color: getColor(trick.cards[playerId].suit, dark),
                         }}
                       >
                         {trick.cards[playerId].value}
-                      </h2>
+                      </span>
                     </div>
                   </Col>
                 )}
@@ -144,7 +145,7 @@ const Players = ({
                 <ModalBody>
                   <Container>
                     <Row className="text-center">
-                      <h1>Bid</h1>
+                      <h2>Bid</h2>
                     </Row>
                     <Row className="justify-content-center mb-3">
                       <div>
@@ -152,10 +153,10 @@ const Players = ({
                           newPlayers
                             .filter((p) => !!bids && bids[p.playerId] != null)
                             .map(({ playerId, name }) => (
-                              <h2
+                              <p
                                 className="mb-2"
                                 key={playerId}
-                              >{`${name}: ${bids?.[playerId]}`}</h2>
+                              >{`${name}: ${bids?.[playerId]}`}</p>
                             ))}
                       </div>
                     </Row>
@@ -165,6 +166,7 @@ const Players = ({
                           <Button
                             className={styles.toggle_button}
                             color="danger"
+                            aria-label="Decrease bid"
                             onClick={(e) =>
                               handleToggle(false, (e.target as HTMLButtonElement).value)
                             }
@@ -177,12 +179,14 @@ const Players = ({
                             value={bid}
                             name="bid"
                             id="bid"
+                            aria-label="Current bid"
                             className={classNames(styles.toggle_results, 'main-text')}
                             readOnly
                           />
                           <Button
                             className={styles.toggle_button}
                             color="success"
+                            aria-label="Increase bid"
                             onClick={(e) =>
                               handleToggle(true, (e.target as HTMLButtonElement).value)
                             }

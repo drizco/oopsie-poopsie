@@ -74,7 +74,7 @@ describe('Header Component', () => {
       },
     })
 
-    const soundButton = screen.getByTitle(/Notification sounds active/i)
+    const soundButton = screen.getByRole('button', { name: /Mute sounds/i })
     fireEvent.click(soundButton)
 
     expect(setMuteMock).toHaveBeenCalled()
@@ -94,7 +94,7 @@ describe('Header Component', () => {
       },
     })
 
-    const themeButton = screen.getByTitle(/Dark mode/i)
+    const themeButton = screen.getByRole('button', { name: /Switch to dark mode/i })
     fireEvent.click(themeButton)
 
     expect(setDarkMock).toHaveBeenCalled()
@@ -107,7 +107,7 @@ describe('Header Component', () => {
       },
     })
 
-    expect(screen.getByTitle(/Notification sounds muted/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Unmute sounds/i })).toBeInTheDocument()
   })
 
   test('shows correct icon for dark mode', () => {
@@ -117,7 +117,7 @@ describe('Header Component', () => {
       },
     })
 
-    expect(screen.getByTitle(/Light mode/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Switch to light mode/i })).toBeInTheDocument()
   })
 
   test('logo links to home page', () => {

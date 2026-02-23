@@ -28,10 +28,12 @@ ul.players {
       transform: scale(1);
       pointer-events: none;
 
-      h1 {
+      .countdown_number {
+        display: block;
         animation: yoyo 1s infinite ease-in-out;
         text-align: center;
         font-size: 5vw;
+        font-family: $font-bold;
         pointer-events: none;
 
         @media only screen and (min-width: 768px) {
@@ -119,13 +121,25 @@ ul.players {
       align-items: center;
       border: none;
 
-      h2 {
+      .card_value {
         margin: 0 0 0 5px;
         font-size: 3vw;
+        font-family: $font-bold;
       }
 
       span {
         font-size: 4.2vw;
+      }
+    }
+
+    .bid_won_text {
+      margin: 0;
+      padding: 0;
+      font-family: $font-bold;
+      font-size: 2.9vw;
+
+      @media only screen and (min-width: 768px) {
+        font-size: 1.5vw;
       }
     }
 

@@ -38,15 +38,22 @@ const Header = () => {
         <div className={styles.rules}>
           {mounted && (
             <>
-              <div title={dark ? 'Light mode' : 'Dark mode'} onClick={handleDark}>
+              <button
+                type="button"
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-pressed={dark}
+                onClick={handleDark}
+              >
                 {dark ? (
                   <Sun className={styles.icon} />
                 ) : (
                   <Moon className={styles.icon} />
                 )}
-              </div>
-              <div
-                title={`Notification sounds ${mute ? 'muted' : 'active'}`}
+              </button>
+              <button
+                type="button"
+                aria-label={mute ? 'Unmute sounds' : 'Mute sounds'}
+                aria-pressed={mute}
                 onClick={handleSound}
               >
                 {mute ? (
@@ -54,11 +61,11 @@ const Header = () => {
                 ) : (
                   <Sound className={styles.icon} />
                 )}
-              </div>
+              </button>
             </>
           )}
-          <button onClick={toggleRules}>
-            <h4 className="red-text">rules</h4>
+          <button onClick={toggleRules} aria-label="Show rules">
+            <span className="red-text">rules</span>
           </button>
         </div>
       </header>

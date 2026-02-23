@@ -28,37 +28,57 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
 
   const cardWidth = 100 / (cards.length || 1)
 
+  const handleCardAction = (card: Card) => {
+    const legal = isLegal({ hand: cards, card, leadSuit })
+    if (!legal) {
+      setIllegalCard(card.cardId || null)
+      return
+    }
+    playCard(card)
+  }
+
   return (
     <>
-      <ul className={styles.card_row}>
+      <ul className={styles.card_row} aria-label="Your hand — select a card to play">
         {cards &&
-          cards.map((card) => (
-            <li
-              className={classNames({
-                'playing-card': true,
-                [styles.shake]: illegalCard === card.cardId,
-                [styles.selected]: queuedCard && queuedCard.cardId === card.cardId,
-              })}
-              data-card-id={card.cardId}
-              key={card.cardId}
-              onClick={(e) => {
-                e.preventDefault()
-                const legal = isLegal({ hand: cards, card, leadSuit })
-                if (!legal) {
-                  setIllegalCard(card.cardId || null)
-                  return
-                }
-                playCard(card)
-              }}
-            >
-              <div>
-                <span style={{ color: getColor(card.suit, dark) }}>
-                  {getSuitSymbol(card.suit)}
-                </span>
-                <h2 style={{ color: getColor(card.suit, dark) }}>{card.value}</h2>
-              </div>
-            </li>
-          ))}
+          cards.map((card) => {
+            const legal = isLegal({ hand: cards, card, leadSuit })
+            const isSelected = !!(queuedCard && queuedCard.cardId === card.cardId)
+            return (
+              <li
+                className={classNames({
+                  'playing-card': true,
+                  [styles.shake]: illegalCard === card.cardId,
+                  [styles.selected]: isSelected,
+                })}
+                data-card-id={card.cardId}
+                key={card.cardId}
+              >
+                <div aria-hidden="true">
+                  <span style={{ color: getColor(card.suit, dark) }}>
+                    {getSuitSymbol(card.suit)}
+                  </span>
+                  <span
+                    className={styles.card_value}
+                    style={{ color: getColor(card.suit, dark) }}
+                  >
+                    {card.value}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.card_button}
+                  aria-label={`${card.value} of ${card.suit}`}
+                  aria-pressed={isSelected}
+                  aria-disabled={!legal}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleCardAction(card)
+                  }}
+                />
+              </li>
+            )
+          })}
       </ul>
       <style jsx>{`
         @media only screen and (max-width: 768px) {
@@ -69,10 +89,10 @@ const CardRow = ({ cards, playCard, queuedCard, leadSuit }: CardRowProps) => {
             max-height: 36vw;
           }
 
-          li > div > span {
+          li > div > span:first-child {
             font-size: min(${cardWidth * 0.3}vw, ${24 * 0.3}vw);
           }
-          li > div > h2 {
+          li > div > span:last-child {
             font-size: min(${cardWidth * 0.35}vw, 10vw);
           }
 

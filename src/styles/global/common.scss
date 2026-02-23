@@ -1,5 +1,11 @@
 /* @styled-jsx=global */
 
+:focus-visible {
+  outline: 3px solid #008ac4;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 body {
   font-family: $font-regular;
   font-size: 18px;

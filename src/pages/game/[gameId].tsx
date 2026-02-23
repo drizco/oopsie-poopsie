@@ -185,19 +185,19 @@ function Game({ gameId, isMobile }: GameProps) {
             )}
             {status && (status === 'bid' || status === 'play' || status === 'over') && (
               <>
-                <h4>{`ROUND: ${roundNum} of ${numRounds}`}</h4>
-                <h4>{`TOTAL TRICKS: ${numCards}`}</h4>
-                <h4>{`TRICKS AVAILABLE: ${getAvailableTricks({
+                <p className={styles.game_info}>{`ROUND: ${roundNum} of ${numRounds}`}</p>
+                <p className={styles.game_info}>{`TOTAL TRICKS: ${numCards}`}</p>
+                <p className={styles.game_info}>{`TRICKS AVAILABLE: ${getAvailableTricks({
                   numCards,
                   bids,
-                })}`}</h4>
+                })}`}</p>
               </>
             )}
           </Col>
           <Col xs="2" className={styles.lead_trump_container}>
             {leadSuit && (
               <>
-                <h3>LEAD</h3>
+                <p className={styles.game_info}>LEAD</p>
                 <span style={{ color: getColor(leadSuit, dark) }}>{getSuitSymbol(leadSuit)}</span>
               </>
             )}
@@ -205,7 +205,7 @@ function Game({ gameId, isMobile }: GameProps) {
           <Col xs="2" className={styles.lead_trump_container}>
             {trump && (
               <>
-                <CustomTrump />
+                <CustomTrump className={styles.game_info} />
                 <span style={{ color: getColor(trump, dark) }}>{getSuitSymbol(trump)}</span>
               </>
             )}

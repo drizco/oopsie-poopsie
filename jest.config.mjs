@@ -84,9 +84,6 @@ export default {
               runtime: 'automatic',
             },
           },
-          experimental: {
-            plugins: [['@swc/plugin-styled-jsx', {}]],
-          },
         },
         module: {
           type: 'es6',
@@ -107,9 +104,6 @@ export default {
             react: {
               runtime: 'automatic',
             },
-          },
-          experimental: {
-            plugins: [['@swc/plugin-styled-jsx', {}]],
           },
         },
         module: {
