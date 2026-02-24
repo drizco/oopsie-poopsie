@@ -16,7 +16,7 @@ describe('JoinGameForm Component', () => {
   test('renders input field with correct value', () => {
     render(<JoinGameForm {...defaultProps} playerName="TestPlayer" />)
 
-    const input = screen.getByLabelText('User Name')
+    const input = screen.getByLabelText('Player Name')
     expect(input).toBeInTheDocument()
     expect(input).toHaveValue('TestPlayer')
   })
@@ -24,7 +24,7 @@ describe('JoinGameForm Component', () => {
   test('renders input field with empty value when playerName is null', () => {
     render(<JoinGameForm {...defaultProps} playerName={null} />)
 
-    const input = screen.getByLabelText('User Name')
+    const input = screen.getByLabelText('Player Name')
     expect(input).toHaveValue('')
   })
 
@@ -32,7 +32,7 @@ describe('JoinGameForm Component', () => {
     const mockOnChange = jest.fn()
     render(<JoinGameForm {...defaultProps} onPlayerNameChange={mockOnChange} />)
 
-    const input = screen.getByLabelText('User Name')
+    const input = screen.getByLabelText('Player Name')
     fireEvent.change(input, { target: { value: 'NewName' } })
 
     expect(mockOnChange).toHaveBeenCalledTimes(1)
