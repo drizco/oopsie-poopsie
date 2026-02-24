@@ -15,7 +15,12 @@ interface JoinGameFormProps {
 const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }: JoinGameFormProps) => {
   return (
     <Box sx={{ mb: 5 }}>
-      <form>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          onJoin()
+        }}
+      >
         <TextField
           fullWidth
           label="User Name"
@@ -26,12 +31,7 @@ const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }: JoinGameFormPr
           slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
           sx={{ mb: 2 }}
         />
-        <Button
-          variant="contained"
-          color="success"
-          disabled={!playerName}
-          onClick={onJoin}
-        >
+        <Button type="submit" variant="contained" color="success" disabled={!playerName}>
           JOIN
         </Button>
       </form>

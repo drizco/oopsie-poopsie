@@ -123,9 +123,7 @@ const CreateGame = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', m: 4 }}>
             <Box sx={{ width: { xs: '83.33%', sm: '58.33%' } }}>
               <h2>Game Code</h2>
-              <h2 className={classnames('red-text', styles.game_code)}>
-                {gameId}
-              </h2>
+              <h2 className={classnames('red-text', styles.game_code)}>{gameId}</h2>
             </Box>
           </Box>
           <Box sx={{ textAlign: 'center', m: 4 }}>
@@ -218,7 +216,12 @@ const CreateGame = () => {
               aria-labelledby="tab-create"
               hidden={!create}
             >
-              <form>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  initializeGame()
+                }}
+              >
                 <TextField
                   fullWidth
                   label="Game Name"
@@ -227,7 +230,7 @@ const CreateGame = () => {
                   value={game}
                   onChange={handleChange}
                   placeholder="optional"
-                  inputProps={{ 'data-lpignore': 'true' }}
+                  slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
                   sx={{ mb: 2 }}
                 />
                 <TextField
@@ -238,15 +241,12 @@ const CreateGame = () => {
                   name="name"
                   value={name}
                   onChange={handleChange}
-                  inputProps={{ 'data-lpignore': 'true' }}
+                  slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
                   sx={{ mb: 2 }}
                 />
 
                 <Box sx={{ mb: 2 }}>
-                  <label
-                    htmlFor="num-cards"
-                    className={styles.num_cards_label}
-                  >
+                  <label htmlFor="num-cards" className={styles.num_cards_label}>
                     Number of cards
                   </label>
                   <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
@@ -317,10 +317,10 @@ const CreateGame = () => {
 
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                   <Button
+                    type="submit"
                     variant="contained"
                     disabled={!name}
                     color="primary"
-                    onClick={initializeGame}
                   >
                     NEW GAME
                   </Button>
@@ -333,7 +333,12 @@ const CreateGame = () => {
               aria-labelledby="tab-join"
               hidden={create}
             >
-              <form>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  joinGame()
+                }}
+              >
                 <TextField
                   fullWidth
                   label="Game Code"
@@ -347,10 +352,10 @@ const CreateGame = () => {
                 />
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                   <Button
+                    type="submit"
                     variant="contained"
                     disabled={gameCode.length < 4}
                     color="primary"
-                    onClick={joinGame}
                   >
                     JOIN GAME
                   </Button>
