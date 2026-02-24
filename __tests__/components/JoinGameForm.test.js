@@ -81,11 +81,4 @@ describe('JoinGameForm Component', () => {
     expect(container.querySelector('input[name="playerName"]')).toBeInTheDocument()
     expect(container.querySelector('input[id="name"]')).toBeInTheDocument()
   })
-
-  test('input has data-lpignore attribute', () => {
-    render(<JoinGameForm {...defaultProps} />)
-
-    const input = screen.getByLabelText('User Name')
-    expect(input).toHaveAttribute('data-lpignore', 'true')
-  })
 })

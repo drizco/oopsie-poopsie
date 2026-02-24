@@ -175,7 +175,6 @@ const Players = ({
                           -
                         </Button>
                         <input
-                          data-lpignore="true"
                           type="text"
                           value={bid}
                           name="bid"

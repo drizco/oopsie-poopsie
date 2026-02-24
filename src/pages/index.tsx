@@ -136,7 +136,6 @@ const CreateGame = () => {
                 value={url}
                 readOnly
                 inputRef={gameUrlRef}
-                inputProps={{ 'data-lpignore': 'true' }}
                 endAdornment={
                   <InputAdornment position="end">
                     <button
@@ -230,18 +229,18 @@ const CreateGame = () => {
                   value={game}
                   onChange={handleChange}
                   placeholder="optional"
-                  slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
+                  autoComplete="off"
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   key={isClient ? 'client' : 'server'}
                   fullWidth
-                  label="User Name"
+                  label="Player Name"
                   id="name"
                   name="name"
+                  autoComplete="nickname"
                   value={name}
                   onChange={handleChange}
-                  slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
                   sx={{ mb: 2 }}
                 />
 
@@ -258,7 +257,6 @@ const CreateGame = () => {
                       -
                     </Button>
                     <input
-                      data-lpignore="true"
                       type="text"
                       value={numCards}
                       name="num-cards"
@@ -347,7 +345,7 @@ const CreateGame = () => {
                   value={gameCode}
                   onChange={handleChange}
                   placeholder="Jb2X"
-                  inputProps={{ 'data-lpignore': 'true' }}
+                  autoComplete="off"
                   sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>

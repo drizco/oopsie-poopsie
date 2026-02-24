@@ -23,12 +23,12 @@ const JoinGameForm = ({ playerName, onPlayerNameChange, onJoin }: JoinGameFormPr
       >
         <TextField
           fullWidth
-          label="User Name"
+          label="Player Name"
           id="name"
           name="playerName"
+          autoComplete="nickname"
           value={playerName || ''}
           onChange={onPlayerNameChange}
-          slotProps={{ htmlInput: { 'data-lpignore': 'true' } }}
           sx={{ mb: 2 }}
         />
         <Button type="submit" variant="contained" color="success" disabled={!playerName}>
