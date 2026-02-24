@@ -190,24 +190,23 @@ ul.players {
   }
 }
 
-form {
-  .toggle_results {
-    padding-left: 0;
-    padding-right: 0;
-    text-align: center;
-    width: 100px;
-    background-color: transparent !important;
-    border: none;
-    font-size: 3rem;
-    color: inherit;
-  }
-
-  .toggle_button {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-  }
+.toggle_results {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  width: 100px;
+  background-color: transparent !important;
+  border: none;
+  font-size: 3rem;
+  color: inherit;
 }
+
+.toggle_button {
+  width: 60px;
+  height: 60px;
+  font-size: 2rem;
+}
+
 .bid_button {
   height: 60px;
   font-size: 2rem;
