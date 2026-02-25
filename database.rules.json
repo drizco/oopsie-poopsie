@@ -4,6 +4,7 @@
     ".write": false,
     "games": {
       "$gameId": {
+        ".read": "auth != null",
         ".indexOn": ["metadata/timestamp"],
         "metadata": {
           ".read": "auth != null"
