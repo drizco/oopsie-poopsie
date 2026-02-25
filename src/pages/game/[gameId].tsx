@@ -137,6 +137,12 @@ function Game({ gameId, isMobile }: GameProps) {
     if (game && currentPlayerId === playerId && (status === 'play' || status === 'bid')) {
       yourTurn()
     }
+    return () => {
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current)
+        autoPlayTimeoutRef.current = null
+      }
+    }
   }, [game, playerId, yourTurn])
 
   const status = game?.state?.status ?? null
