@@ -120,10 +120,14 @@ const useGameActions = ({
 
   // Your turn handler - auto-plays queued card when it's player's turn
   const yourTurn = useCallback(async () => {
+    if (autoPlayTimeoutRef.current) {
+      clearTimeout(autoPlayTimeoutRef.current)
+      autoPlayTimeoutRef.current = null
+    }
     if (queuedCard) {
       autoPlayTimeoutRef.current = setTimeout(async () => {
-        await playCard(queuedCard)
         updateState({ queuedCard: null })
+        await playCard(queuedCard)
       }, 700)
     } else {
       if (!visible) {
