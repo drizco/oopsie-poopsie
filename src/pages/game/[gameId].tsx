@@ -82,11 +82,31 @@ function Game({ gameId, isMobile }: GameProps) {
   // Refs for actions
   const autoPlayTimeoutRef = useRef(null)
 
-  // While the winner modal is open, show the completed trick (snapshotted
-  // in the listener) so cards stay visible even if the round resets.
+  // While the winner modal is open, show the completed trick and round data
+  // (snapshotted in the listener) so cards stay visible even if the round resets.
+  const lastRoundSnapshotRef = useRef<{
+    bids: Record<string, number>
+    roundScore: Record<string, number>
+  } | null>(null)
+
+  // Keep snapshot updated whenever we have real bids data
+  if (Object.keys(bids).length > 0) {
+    lastRoundSnapshotRef.current = { bids, roundScore }
+  }
+  // Clear snapshot when modal closes
+  if (!lastWinner) {
+    lastRoundSnapshotRef.current = null
+  }
+
   const displayedTrick = lastWinner && state.lastCompletedTrick
     ? state.lastCompletedTrick
     : trick
+  const displayedBids = lastWinner && lastRoundSnapshotRef.current
+    ? lastRoundSnapshotRef.current.bids
+    : bids
+  const displayedRoundScore = lastWinner && lastRoundSnapshotRef.current
+    ? lastRoundSnapshotRef.current.roundScore
+    : roundScore
 
   // Hook #3: Firebase Listeners
   const { removeListeners } = useGameListeners({
@@ -290,8 +310,8 @@ function Game({ gameId, isMobile }: GameProps) {
           players={players}
           playerOrder={playerOrder}
           currentPlayer={currentPlayer}
-          bids={bids}
-          roundScore={roundScore}
+          bids={displayedBids}
+          roundScore={displayedRoundScore}
           trick={displayedTrick}
           bid={bid}
           dealer={dealer}
