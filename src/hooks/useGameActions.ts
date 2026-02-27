@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import type { MutableRefObject } from 'react'
+import type { RefObject } from 'react'
 import {
   newGame,
   replayGame,
@@ -32,7 +32,8 @@ interface UseGameActionsOptions {
       | Partial<LocalGameState>
       | ((prevState: LocalGameState) => Partial<LocalGameState>)
   ) => void
-  autoPlayTimeoutRef: MutableRefObject<NodeJS.Timeout | null>
+  autoPlayTimeoutRef: RefObject<NodeJS.Timeout | null>
+  onBeforeAutoPlay?: (card: Card) => void
 }
 
 /**
@@ -56,6 +57,7 @@ const useGameActions = ({
   setLoading,
   updateState,
   autoPlayTimeoutRef,
+  onBeforeAutoPlay,
 }: UseGameActionsOptions) => {
   // Play card - handles playing a card or queuing it for later
   const playCard = useCallback(
@@ -66,6 +68,10 @@ const useGameActions = ({
         }
 
         if (!game || !game.state || !game.metadata) {
+          return
+        }
+
+        if (game.state.status !== 'play') {
           return
         }
 
@@ -98,28 +104,32 @@ const useGameActions = ({
           trickId: trick.trickId,
         }
 
-        setLoading(true)
         const response = await playCardApi(body)
         if (!response.ok) {
           const message = await parseApiError(response, 'Failed to play card')
           setError(message)
         }
-        setLoading(false)
       } catch {
-        setLoading(false)
         setError('Failed to play card')
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setLoading, setError, tricks, trickIndex, game, playerId, updateState] // autoPlayTimeoutRef is a ref
+    [setError, tricks, trickIndex, game, playerId, updateState] // autoPlayTimeoutRef is a ref
   )
 
   // Your turn handler - auto-plays queued card when it's player's turn
   const yourTurn = useCallback(async () => {
+    if (autoPlayTimeoutRef.current) {
+      clearTimeout(autoPlayTimeoutRef.current)
+      autoPlayTimeoutRef.current = null
+    }
     if (queuedCard) {
       autoPlayTimeoutRef.current = setTimeout(async () => {
-        await playCard(queuedCard)
+        if (onBeforeAutoPlay) {
+          onBeforeAutoPlay(queuedCard)
+        }
         updateState({ queuedCard: null })
+        await playCard(queuedCard)
       }, 700)
     } else {
       if (!visible) {
@@ -127,7 +137,7 @@ const useGameActions = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, queuedCard, playCard, updateState]) // autoPlayTimeoutRef is a ref, doesn't need to be in deps
+  }, [visible, queuedCard, playCard, updateState, onBeforeAutoPlay]) // autoPlayTimeoutRef is a ref, doesn't need to be in deps
 
   // Submit bid - submits the player's bid for the round
   const submitBid = useCallback(
@@ -297,7 +307,7 @@ const useGameActions = ({
   const closeModal = useCallback(async () => {
     if (!game) return
 
-    updateState({ lastWinner: null })
+    updateState({ lastWinner: null, lastCompletedTrick: null })
   }, [game, updateState])
 
   return {

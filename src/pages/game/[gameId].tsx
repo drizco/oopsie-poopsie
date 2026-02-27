@@ -26,6 +26,11 @@ import CustomTrump from '../../components/CustomTrump'
 import CountdownOverlay from '../../components/CountdownOverlay'
 import JoinGameForm from '../../components/JoinGameForm'
 import YourTurnIndicator from '../../components/YourTurnIndicator'
+import FlyingCard from '../../components/FlyingCard'
+import {
+  CardAnimationProvider,
+  useCardAnimation,
+} from '../../context/CardAnimationContext'
 
 // Custom hooks
 import useGameState from '../../hooks/useGameState'
@@ -38,9 +43,18 @@ interface GameProps {
   isMobile: boolean
 }
 
+function GameWithAnimation(props: GameProps) {
+  return (
+    <CardAnimationProvider>
+      <Game {...props} />
+    </CardAnimationProvider>
+  )
+}
+
 function Game({ gameId, isMobile }: GameProps) {
   const router = useRouter()
   const { visible, setError, setLoading } = useContext(AppStateContext)
+  const { triggerCardFly } = useCardAnimation()
 
   // Hook #1: State Management
   const { state, updateState, dispatchRound, roundState, initializeGame } = useGameState({
@@ -71,6 +85,31 @@ function Game({ gameId, isMobile }: GameProps) {
   // Refs for actions
   const autoPlayTimeoutRef = useRef(null)
 
+  // While the winner modal is open, show the completed trick and round data
+  // (snapshotted in the listener) so cards stay visible even if the round resets.
+  const lastRoundSnapshotRef = useRef<{
+    bids: Record<string, number>
+    roundScore: Record<string, number>
+  } | null>(null)
+
+  // Keep snapshot updated whenever we have real bids data
+  if (Object.keys(bids).length > 0) {
+    lastRoundSnapshotRef.current = { bids, roundScore }
+  }
+  // Clear snapshot when modal closes
+  if (!lastWinner) {
+    lastRoundSnapshotRef.current = null
+  }
+
+  const displayedTrick =
+    lastWinner && state.lastCompletedTrick ? state.lastCompletedTrick : trick
+  const displayedBids =
+    lastWinner && lastRoundSnapshotRef.current ? lastRoundSnapshotRef.current.bids : bids
+  const displayedRoundScore =
+    lastWinner && lastRoundSnapshotRef.current
+      ? lastRoundSnapshotRef.current.roundScore
+      : roundScore
+
   // Hook #3: Firebase Listeners
   const { removeListeners } = useGameListeners({
     gameId,
@@ -98,6 +137,16 @@ function Game({ gameId, isMobile }: GameProps) {
     setLoading,
     updateState,
     autoPlayTimeoutRef,
+    onBeforeAutoPlay: (card) => {
+      if (playerId && card.cardId) {
+        const el = document.querySelector(
+          `[data-card-id="${card.cardId}"]`
+        ) as HTMLElement | null
+        if (el) {
+          triggerCardFly(card, el, playerId)
+        }
+      }
+    },
   })
 
   const {
@@ -123,12 +172,25 @@ function Game({ gameId, isMobile }: GameProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId])
 
+  // Clear queued card when entering bid phase (new round)
+  useEffect(() => {
+    if (game?.state?.status === 'bid' && queuedCard) {
+      updateState({ queuedCard: null })
+    }
+  }, [game?.state?.status, queuedCard, updateState])
+
   // Handle "your turn" logic
   useEffect(() => {
     const currentPlayerId = game?.state?.playerOrder?.[game.state.currentPlayerIndex]
     const status = game?.state?.status
     if (game && currentPlayerId === playerId && (status === 'play' || status === 'bid')) {
       yourTurn()
+    }
+    return () => {
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current)
+        autoPlayTimeoutRef.current = null
+      }
     }
   }, [game, playerId, yourTurn])
 
@@ -252,9 +314,9 @@ function Game({ gameId, isMobile }: GameProps) {
           players={players}
           playerOrder={playerOrder}
           currentPlayer={currentPlayer}
-          bids={bids}
-          roundScore={roundScore}
-          trick={trick}
+          bids={displayedBids}
+          roundScore={displayedRoundScore}
+          trick={displayedTrick}
           bid={bid}
           dealer={dealer}
           handleToggle={handleToggle}
@@ -274,7 +336,13 @@ function Game({ gameId, isMobile }: GameProps) {
         playCard={playCard}
         queuedCard={queuedCard}
         leadSuit={leadSuit || null}
+        onCardPlayed={(card, sourceEl) => {
+          if (currentPlayer === playerId) {
+            triggerCardFly(card, sourceEl, playerId)
+          }
+        }}
       />
+      <FlyingCard />
       {/* Trick winner flash modal */}
       <Dialog
         open={Boolean(lastWinner)}
@@ -385,4 +453,4 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   return { props: { gameId, isMobile } }
 }
 
-export default Game
+export default GameWithAnimation

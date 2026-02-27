@@ -78,6 +78,6 @@ jobs:
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@v15.7.0
         with:
-          args: deploy --only functions,database
+          args: deploy --only functions,database --force
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
